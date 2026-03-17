@@ -24,6 +24,7 @@
 		"url": "https://github.com/DoctorMcKay/node-globaloffensive.git"
 	},
 	"dependencies": {
+		"@doctormckay/stdlib": "^2.10.0",
 		"bytebuffer": "^5.0.1",
 		"globaloffensive-sharecode": "^1.1.1",
 		"long": "^5.2.3",

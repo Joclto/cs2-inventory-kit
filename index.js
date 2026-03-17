@@ -6,6 +6,7 @@ const Util = require('util');
 
 const Language = require('./language.js');
 const Protos = require('./protobufs/generated/_load.js');
+const {decode: decodeMaskedInspectLink} = require('./lib/inspect-link.js');
 
 const STEAM_APPID = 730;
 
@@ -214,6 +215,22 @@ GlobalOffensive.prototype.requestLiveGameForUser = function(steamid) {
 };
 
 GlobalOffensive.prototype.inspectItem = function(owner, assetid, d, callback) {
+	// First try to decode embedded/masked inspect links
+	if (typeof owner === 'string') {
+		let decoded = decodeMaskedInspectLink(owner);
+		if (decoded) {
+			// delay resolution to next frame just in case a synchronous callback causes problems in consumer code
+			let cb = [assetid, d, callback].find(v => typeof v === 'function');
+			setImmediate(() => {
+				cb && cb(decoded);
+				this.emit('inspectItemInfo', decoded);
+				this.emit('inspectItemInfo#' + decoded.itemid, decoded);
+			});
+
+			return;
+		}
+	}
+
 	let match;
 	if (typeof owner === 'string' && (match = owner.match(/[SM](\d+)A(\d+)D(\d+)$/))) {
 		callback = assetid;
