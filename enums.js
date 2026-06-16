@@ -21,10 +21,20 @@ GlobalOffensive.ItemCustomizationNotification = {
 	NameBaseItem: 1019,
 	RemoveItemName: 1030,
 	RemoveSticker: 1053,
+	ExtractSticker: 1054,
+	EncapsulateSticker: 1055,
 	ApplySticker: 1086,
 	StatTrakSwap: 1088,
+	RemovePatch: 1089,
+	ApplyPatch: 1090,
+	ApplyKeychain: 1091,
+	RemoveKeychain: 1092,
 	ActivateFanToken: 9178,
 	ActivateOperationCoin: 9179,
 	GraffitiUnseal: 9185,
-	GenerateSouvenir: 9204
+	GenerateSouvenir: 9204,
+	ClientRedeemMissionReward: 9209,
+	ClientRedeemFreeReward: 9219,
+	XpShopUseTicket: 9221,
+	XpShopAckTracks: 9222
 };
