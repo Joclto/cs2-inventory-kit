@@ -1,41 +1,59 @@
-# Counter-Strike Global Offensive for Node.js
-[![npm version](https://img.shields.io/npm/v/globaloffensive.svg)](https://npmjs.com/package/globaloffensive)
-[![npm downloads](https://img.shields.io/npm/dm/globaloffensive.svg)](https://npmjs.com/package/globaloffensive)
-[![license](https://img.shields.io/npm/l/globaloffensive.svg)](https://github.com/DoctorMcKay/node-globaloffensive/blob/master/LICENSE)
+# cs2-inventory-kit
 
-This module provides a very flexible interface for interacting with the [CS2](http://store.steampowered.com/app/730)
-Game Coordinator. It's designed to work with a
-[node-steam-user SteamUser](https://github.com/DoctorMcKay/node-steam-user) instance.
+[![license](https://img.shields.io/github/license/Joclto/cs2-inventory-kit.svg)](https://github.com/Joclto/cs2-inventory-kit/blob/master/LICENSE)
+[![fork](https://img.shields.io/badge/fork%20of-node--globaloffensive-blue.svg)](https://github.com/DoctorMcKay/node-globaloffensive)
 
-This is based off of [node-tf2](https://github.com/DoctorMcKay/node-tf2).
+**Inventory-focused CS2 Game Coordinator library with built-in item data enrichment.**
 
-**You will need steam-user v4.2.0 or later and Node.js v14 or later to use globaloffensive v3.**  
-You will need steam-user v4.2.0 or later and Node.js v8 or later to use globaloffensive v2.
+A fork of [DoctorMcKay/node-globaloffensive](https://github.com/DoctorMcKay/node-globaloffensive), extended with:
+- 🔑 **Keychain support** — `applyKeychain()`, `removeKeychain()`, `keychainCharges` event
+- 📦 **Item data enrichment** — auto-resolves item names, rarity, wear category, and more *(coming soon)*
+- 🔄 **Fully backward compatible** — drop-in replacement, zero code changes required
 
-# Setup
+> **Fork Notice**: This project is based on [DoctorMcKay/node-globaloffensive](https://github.com/DoctorMcKay/node-globaloffensive) by Alexander Corn. All credit for the original work goes to him. See [LICENSE](./LICENSE).
 
-First, install it from npm:
+## Differences from node-globaloffensive
 
-	$ npm install globaloffensive
+| Feature | node-globaloffensive | cs2-inventory-kit |
+|---|---|---|
+| Basic GC connection | ✅ | ✅ |
+| Inventory / Casket / Craft | ✅ | ✅ |
+| inspectItem | ✅ | ✅ |
+| Keychain operations | ❌ | ✅ `applyKeychain` / `removeKeychain` |
+| Keychain charges event | ❌ | ✅ `keychainCharges` |
+| Item data enrichment | ❌ | 🚧 *(in development)* |
+| Match / Profile / Live Games | ✅ | ✅ (kept for compatibility) |
 
-Require the module and call its constructor with your SteamUser instance:
+## Install
+
+```bash
+$ npm install cs2-inventory-kit
+```
+
+## Quick Start
 
 ```js
 const SteamUser = require('steam-user');
-const GlobalOffensive = require('globaloffensive');
+const GlobalOffensive = require('cs2-inventory-kit');
 
 let user = new SteamUser();
 let csgo = new GlobalOffensive(user);
+
+csgo.on('connectedToGC', () => {
+    console.log('Connected to GC!');
+    console.log(`Inventory: ${csgo.inventory.length} items`);
+});
+
+// Keychain support
+csgo.on('keychainCharges', (charges) => {
+    console.log(`Keychain removal tool charges: ${charges}`);
+});
+
+user.logOn({ refreshToken: 'your-refresh-token' });
+user.on('loggedOn', () => {
+    user.gamesPlayed([730]); // Connect to CS2 GC
+});
 ```
-
-To initialize your GC connection, just launch CS:GO via SteamUser normally:
-
-```js
-client.gamesPlayed([730]);
-```
-
-node-globaloffensive will emit a `connectedToGC` event when the game coordinator connection has been successfully
-established. You shouldn't try to do anything before you receive that event.
 
 # Enums
 
