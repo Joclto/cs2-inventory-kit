@@ -127,6 +127,9 @@ GlobalOffensive.prototype._initEnricher = function(opts) {
 	this._dataLoader = new DataLoader(dataDir);
 
 	this._dataLoader.load(opts).then((data) => {
+		if (opts.marks) {
+			data.marks = opts.marks;
+		}
 		this._itemProcessor = new ItemProcessor(data);
 		this._manifestId = data.manifestId;
 
@@ -200,6 +203,10 @@ GlobalOffensive.prototype.ready = function() {
  *   `hash_name` and `exterior_name` are always English (market standard).
  * @param {number} [opts.checkIntervalHours] - Update check interval in hours (default 24)
  * @param {boolean} [opts.forceUpdate] - Force re-download all files
+ * @param {object} [opts.marks] - Custom mark mappings. When provided, items will have
+ *   `rarity_mark` / `quality_mark` / `exterior_mark` / `itemset_mark` fields.
+ *   Example: init({ marks: { rarity: {mythical_weapon:'SX'}, quality: {strange:'ST'},
+ *   exterior: {wearcategory0:'ZX'}, itemset: {set_community_3:'PRIN'} } })
  */
 GlobalOffensive.prototype.init = function(opts) {
 	this._enricherReady = false;

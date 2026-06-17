@@ -61,7 +61,47 @@ Item objects in `inventory`, `itemAcquired`, `itemChanged`, and `getCasketConten
 | `trade_protect` | `false` | Whether item is gift-restricted (attribute `def_index=312`). Does NOT indicate Steam market tradability |
 | `msg` | `null` | Enrichment status: `null` = success, string = warning/error |
 
-> **Design principle**: Only Valve-native identifiers are used (e.g. `mythical_weapon`, not custom abbreviations like `SX`). Application-specific mappings should be done in your own code.
+#### Custom Marks (Optional)
+
+Valve-native identifiers (e.g. `mythical_weapon`, `wearcategory0`) are precise but not always human-friendly. If you prefer short marks, pass custom mappings via `init()`:
+
+```js
+csgo.init({
+    marks: {
+        rarity: {
+            'common_weapon': 'XF',
+            'uncommon_weapon': 'GY',
+            'rare_weapon': 'JG',
+            'mythical_weapon': 'SX',
+            'legendary_weapon': 'BM',
+            'ancient_weapon': 'YM'
+        },
+        quality: {
+            'normal': 'PT',
+            'strange': 'ST'
+        },
+        exterior: {
+            'wearcategory0': 'ZX',
+            'wearcategory1': 'LM',
+            'wearcategory2': 'JJ',
+            'wearcategory3': 'PS',
+            'wearcategory4': 'ZH'
+        },
+        itemset: { 'set_community_3': 'PRIN' }
+    }
+});
+```
+
+When `marks` is provided, items will have these additional fields:
+
+| Field | Key source | Example |
+|---|---|---|
+| `rarity_mark` | `rarity_name` value | `"SX"` |
+| `quality_mark` | `quality_name` value | `"ST"` |
+| `exterior_mark` | `wear_category` value | `"JJ"` |
+| `itemset_mark` | `item_set` value | `"PRIN"` |
+
+If `marks` is not provided, these fields will not exist on item objects.
 
 #### Multi-Language Support
 
@@ -103,6 +143,7 @@ Supported keywords (29 languages): `brazilian`, `bulgarian`, `czech`, `danish`, 
 | `dataDir` | string | `./cs2-inventory-schema` | Custom data directory |
 | `defaultLanguage` | string | `schinese` | Language for the `name` field. Auto-downloaded if not schinese/english |
 | `languages` | string[] | `[]` | Additional languages for `name_{lang}` fields |
+| `marks` | object | `null` | Custom mark mappings (see [Custom Marks](#custom-marks-optional)) |
 | `checkIntervalHours` | number | `24` | Update check interval |
 | `forceUpdate` | boolean | `false` | Force re-download all files |
 

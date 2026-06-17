@@ -20,6 +20,7 @@ class ItemProcessor {
         this.extraTranslations = {};
         this.defaultLanguage = data.defaultLanguage || 'schinese';
         this.defaultTranslation = {};
+        this.marks = data.marks || null;
 
         this.loadItemsGame(data.itemsGame);
         this.loadTranslations(data.schinese);
@@ -174,6 +175,22 @@ class ItemProcessor {
                 const extraName = this.getItemName(storageRow, translations);
                 if (extraName) {
                     result['name_' + lang] = extraName;
+                }
+            }
+
+            // 自定义 mark（仅在 init 时传入了 marks 配置才输出）
+            if (this.marks) {
+                if (this.marks.rarity && result.rarity_name) {
+                    result.rarity_mark = this.marks.rarity[result.rarity_name] || null;
+                }
+                if (this.marks.quality && result.quality_name) {
+                    result.quality_mark = this.marks.quality[result.quality_name] || null;
+                }
+                if (this.marks.exterior && result.wear_category) {
+                    result.exterior_mark = this.marks.exterior[result.wear_category] || null;
+                }
+                if (this.marks.itemset && result.item_set) {
+                    result.itemset_mark = this.marks.itemset[result.item_set] || null;
                 }
             }
 
