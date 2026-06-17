@@ -117,6 +117,14 @@ function GlobalOffensive(steam) {
 		this._enrichItem(newItem);
 	});
 
+	// Hook: GC 连接后批量富化 inventory（处理 enricher 先就绪、GC 后连接的场景）
+	this.on('connectedToGC', () => {
+		if (this._enricherReady && this.inventory && this.inventory.length > 0) {
+			this.inventory.forEach((item) => this._enrichItem(item));
+			this.emit('debug', 'Enricher: batch-enriched ' + this.inventory.length + ' items on GC connect');
+		}
+	});
+
 	// 启动 enricher（异步，不阻塞）
 	this._initEnricher();
 }
