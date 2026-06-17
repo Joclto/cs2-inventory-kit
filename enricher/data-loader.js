@@ -3,7 +3,30 @@ const path = require('path');
 const https = require('https');
 
 const FILE_TRACKER_REPO = 'ByMykel/counter-strike-file-tracker';
-const FILES = ['items_game.json', 'csgo_schinese.json', 'csgo_english.json'];
+
+/**
+ * 支持的语言关键词（对应 csgo_{lang}.json 文件名）。
+ * 用户通过 init({ languages: ['french', 'japanese'] }) 指定额外语言。
+ *
+ * 完整列表：
+ *   brazilian, bulgarian, czech, danish, dutch, english, finnish,
+ *   french, german, greek, hungarian, italian, japanese, koreana,
+ *   latam, norwegian, polish, portuguese, romanian, russian,
+ *   schinese, schinese_pw, spanish, swedish, tchinese, thai,
+ *   turkish, ukrainian, vietnamese
+ *
+ * @type {string[]}
+ */
+const SUPPORTED_LANGUAGES = [
+	'brazilian', 'bulgarian', 'czech', 'danish', 'dutch', 'english', 'finnish',
+	'french', 'german', 'greek', 'hungarian', 'italian', 'japanese', 'koreana',
+	'latam', 'norwegian', 'polish', 'portuguese', 'romanian', 'russian',
+	'schinese', 'schinese_pw', 'spanish', 'swedish', 'tchinese', 'thai',
+	'turkish', 'ukrainian', 'vietnamese'
+];
+
+// 默认下载的 3 个文件（items_game + schinese + english）
+const DEFAULT_FILES = ['items_game.json', 'csgo_schinese.json', 'csgo_english.json'];
 
 class DataLoader {
     constructor(dataDir) {
@@ -11,31 +34,67 @@ class DataLoader {
         this.cachePath = path.join(dataDir, 'cache.json');
     }
 
+    /**
+     * 加载数据，自动检查更新。
+     * @param {object} [opts]
+     * @param {boolean} [opts.forceUpdate=false] - 强制重新下载
+     * @param {string[]} [opts.languages=[]] - 额外语言（如 ['french', 'japanese']）
+     * @param {number} [opts.checkIntervalHours=24] - 更新检查间隔
+     * @returns {Promise<object>} { itemsGame, schinese, english, extraLanguages, manifestId }
+     */
     async load(opts = {}) {
-        const { forceUpdate = false } = opts;
+        const { forceUpdate = false, languages = [], checkIntervalHours = 24 } = opts;
         if (!fs.existsSync(this.dataDir)) fs.mkdirSync(this.dataDir, { recursive: true });
 
-        const cache = this.readCache();
-        await this.checkAndUpdate(cache, forceUpdate);
+        // 构建动态文件列表：默认 3 个 + 额外语言
+        const files = [...DEFAULT_FILES];
+        const langFileMap = {}; // { french: 'csgo_french.json', ... }
+        for (const lang of languages) {
+            if (!SUPPORTED_LANGUAGES.includes(lang)) {
+                console.warn(`[DataLoader] 不支持的语言: ${lang}，跳过。支持的语言见 SUPPORTED_LANGUAGES`);
+                continue;
+            }
+            const fileName = 'csgo_' + lang + '.json';
+            if (!files.includes(fileName)) {
+                files.push(fileName);
+                langFileMap[lang] = fileName;
+            }
+        }
 
-        // 返回加载的数据 + manifest 信息
+        const cache = this.readCache();
+        if (checkIntervalHours !== 24) {
+            cache.checkIntervalHours = checkIntervalHours;
+        }
+        await this.checkAndUpdate(cache, forceUpdate, files);
+
+        // 返回加载的数据
         const result = {
             itemsGame: this.readJson('items_game.json'),
             schinese: this.readJson('csgo_schinese.json'),
             english: this.readJson('csgo_english.json'),
+            extraLanguages: {},
             manifestId: cache.manifestId,
         };
+
+        // 加载额外语言数据
+        for (const [lang, fileName] of Object.entries(langFileMap)) {
+            try {
+                result.extraLanguages[lang] = this.readJson(fileName);
+            } catch (e) {
+                console.warn(`[DataLoader] 加载 ${fileName} 失败: ${e.message}`);
+            }
+        }
 
         return result;
     }
 
-    async checkAndUpdate(cache, force) {
+    async checkAndUpdate(cache, force, files) {
         try {
-            await this._doCheckAndUpdate(cache, force);
+            await this._doCheckAndUpdate(cache, force, files);
         } catch (err) {
-            // 网络失败 fallback
-            const allFilesExist = FILES.every(f => fs.existsSync(path.join(this.dataDir, f)));
-            if (allFilesExist) {
+            // 网络失败 fallback：检查默认文件是否都在
+            const allDefaultExist = DEFAULT_FILES.every(f => fs.existsSync(path.join(this.dataDir, f)));
+            if (allDefaultExist) {
                 console.warn(`[DataLoader] 网络检查失败，使用本地缓存: ${err.message}`);
                 return;
             }
@@ -43,7 +102,7 @@ class DataLoader {
         }
     }
 
-    async _doCheckAndUpdate(cache, force) {
+    async _doCheckAndUpdate(cache, force, files) {
         // cache 损坏/为空 → 全量重下（首次使用场景）
         if (!cache || !cache.files || Object.keys(cache.files).length === 0) {
             console.log('[DataLoader] 缓存为空或损坏，全量下载');
@@ -54,7 +113,7 @@ class DataLoader {
         let anyChanged = false;
         const now = Date.now();
 
-        for (const file of FILES) {
+        for (const file of files) {
             const localPath = path.join(this.dataDir, file);
 
             // 本地不存在的文件必须下载
@@ -98,7 +157,7 @@ class DataLoader {
         // 记录 manifest ID 和 lastDownloadTime
         if (anyChanged) {
             try {
-                const commitInfo = await this.getLatestCommitInfo(FILES[0]);
+                const commitInfo = await this.getLatestCommitInfo(DEFAULT_FILES[0]);
                 const m = commitInfo.commit?.message?.match(/manifest\s+(\d+)/i);
                 if (m) newCache.manifestId = m[1];
                 newCache.lastDownloadTime = new Date().toISOString();
@@ -106,7 +165,6 @@ class DataLoader {
         }
 
         this.writeCache(newCache);
-        // 更新外部传入的 cache 引用（供 load() 读取 manifestId）
         Object.assign(cache, newCache);
     }
 
@@ -160,4 +218,4 @@ class DataLoader {
     }
 }
 
-module.exports = { DataLoader };
+module.exports = { DataLoader, SUPPORTED_LANGUAGES };
