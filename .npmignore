@@ -1,0 +1,20 @@
+# IDE
+.idea/
+.vscode/
+
+# Development tools
+scripts/
+
+# Proto source files (only need generated/ at runtime)
+protobufs/*.proto
+
+# Misc
+.gitignore
+.npmrc
+npm-debug.log*
+
+# Runtime data (user downloads these)
+cs2-inventory-schema/
+
+# Tarballs
+*.tgz
