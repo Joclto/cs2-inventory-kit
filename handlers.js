@@ -37,6 +37,14 @@ handlers[Language.ClientWelcome] = function(body) {
 
 					this.inventory = items;
 					break;
+				case 15:
+					// Keychain removal tool charges
+					cache.object_data.forEach((object) => {
+						let charges = decodeProto(Protos.CSOAccountKeychainRemoveToolCharges, object);
+						this._keychainCharges = charges.charges;
+						this.emit('keychainCharges', charges.charges);
+					});
+					break;
 				/*case 7:
 					// Account metadata - this doesn't appear to be useful in CS:GO
 					let data = decodeProto(Protos.CSOEconGameAccountClient, cache.object_data[0]);
@@ -278,6 +286,13 @@ handlers[Language.SO_Create] = function(body) {
 };
 
 GlobalOffensive.prototype._handleSOCreate = function(proto) {
+	if (proto.type_id == 15) {
+		let charges = decodeProto(Protos.CSOAccountKeychainRemoveToolCharges, proto.object_data);
+		this._keychainCharges = charges.charges;
+		this.emit('keychainCharges', charges.charges);
+		return;
+	}
+
 	if (proto.type_id != 1) {
 		return; // Not an item
 	}
@@ -299,6 +314,13 @@ handlers[Language.SO_Update] = function(body) {
 };
 
 GlobalOffensive.prototype._handleSOUpdate = function(so) {
+	if (so.type_id == 15) {
+		let charges = decodeProto(Protos.CSOAccountKeychainRemoveToolCharges, so.object_data);
+		this._keychainCharges = charges.charges;
+		this.emit('keychainCharges', charges.charges);
+		return;
+	}
+	
 	if (so.type_id != 1) {
 		return; // Not an item, we don't care
 	}
