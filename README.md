@@ -5,24 +5,118 @@
 
 **Inventory-focused CS2 Game Coordinator library with built-in item data enrichment.**
 
-A fork of [DoctorMcKay/node-globaloffensive](https://github.com/DoctorMcKay/node-globaloffensive), extended with:
-- 🔑 **Keychain support** — `applyKeychain()`, `removeKeychain()`, `keychainCharges` event
-- 📦 **Item data enrichment** — auto-resolves item names, rarity, wear category, and more *(coming soon)*
-- 🔄 **Fully backward compatible** — drop-in replacement, zero code changes required
+## Compatibility
 
-> **Fork Notice**: This project is based on [DoctorMcKay/node-globaloffensive](https://github.com/DoctorMcKay/node-globaloffensive) by Alexander Corn. All credit for the original work goes to him. See [LICENSE](./LICENSE).
+This library is a **drop-in replacement** for [node-globaloffensive](https://github.com/DoctorMcKay/node-globaloffensive). All existing methods, events, and properties are fully supported with zero code changes.
 
-## Differences from node-globaloffensive
+**Complete API reference**: [node-globaloffensive README](https://github.com/DoctorMcKay/node-globaloffensive#readme)
 
-| Feature | node-globaloffensive | cs2-inventory-kit |
+To migrate, simply change your `require` statement:
+
+```js
+// Before
+const GlobalOffensive = require('globaloffensive');
+
+// After
+const GlobalOffensive = require('cs2-inventory-kit');
+```
+
+That's it. Everything else works exactly the same.
+
+> **Fork Notice**: Based on [node-globaloffensive](https://github.com/DoctorMcKay/node-globaloffensive) by Alexander Corn (MIT License).
+
+---
+
+## What's New
+
+### Keychain Support
+
+Methods and events for CS2 keychain (weapon charm) operations:
+
+| API | Type | Description |
 |---|---|---|
-| Basic GC connection | ✅ | ✅ |
-| Inventory / Casket / Craft | ✅ | ✅ |
-| inspectItem | ✅ | ✅ |
-| Keychain operations | ❌ | ✅ `applyKeychain` / `removeKeychain` |
-| Keychain charges event | ❌ | ✅ `keychainCharges` |
-| Item data enrichment | ❌ | 🚧 *(in development)* |
-| Match / Profile / Live Games | ✅ | ✅ (kept for compatibility) |
+| `csgo.applyKeychain(itemId, keychainId[, keychainSlot])` | Method | Apply a keychain to a weapon (keychain item is consumed) |
+| `csgo.removeKeychain(itemId)` | Method | Remove a keychain from a weapon (consumes one removal tool charge) |
+| `csgo.keychainCharges` | Property (read-only) | Remaining keychain removal tool charges. `undefined` until GC pushes data |
+| `csgo.on('keychainCharges', fn)` | Event | Emitted when charges change (on GC connect, after removal, etc.) |
+
+### Item Data Enrichment (Automatic)
+
+Item objects in `inventory`, `itemAcquired`, `itemChanged`, and `getCasketContents` are **automatically enriched** with human-readable data. No API call needed — it just works.
+
+#### Enriched Fields
+
+| Field | Example | Source |
+|---|---|---|
+| `name` | `"★ Karambit \| Fade"` | items_game + default language translation |
+| `hash_name` | `"★ Karambit \| Fade (Factory New)"` | items_game + english translation (market standard) |
+| `exterior_name` | `"Factory New"` | English wear name (derived from `paint_wear`) |
+| `market_name` | `"★ Karambit \| Fade (Factory New)"` | `name` + `exterior_name` |
+| `rarity_name` | `"mythical_weapon"` | Valve identifier (from items_game `rarities`) |
+| `quality_name` | `"strange"` | Valve identifier (`normal` / `strange`) |
+| `wear_category` | `"wearcategory0"` | Valve identifier (from items_game `wear_blocks`) |
+| `recipe` | `4` or `14` | Trade-up recipe index (`rarity - 1`, +10 if StatTrak) |
+| `item_set` | `"set_community_3"` | Original key from items_game `item_sets` |
+| `pendant` | `"挂件-1234"` | Keychain name from `keychain_definitions` |
+| `trade_protect` | `false` | Whether item has attribute `def_index=312` |
+| `item_storage_total` | `62` | Same as `casket_contained_item_count` |
+| `msg` | `null` | Enrichment status: `null` = success, string = warning/error |
+
+> **Design principle**: Only Valve-native identifiers are used (e.g. `mythical_weapon`, not custom abbreviations like `SX`). Application-specific mappings should be done in your own code.
+
+#### Multi-Language Support
+
+The `name` field uses **Simplified Chinese** by default. `hash_name` and `exterior_name` are always English (market standard).
+
+Change the default language for `name`:
+
+```js
+csgo.init({ defaultLanguage: 'english' });
+// Now item.name uses English translations
+// item.name = "★ Karambit | Fade" (English)
+```
+
+Add more languages for `name_{lang}` fields:
+
+```js
+csgo.init({
+    defaultLanguage: 'french',         // item.name → French
+    languages: ['japanese', 'tchinese'] // item.name_japanese, item.name_tchinese
+});
+```
+
+Supported keywords (29 languages): `brazilian`, `bulgarian`, `czech`, `danish`, `dutch`, `english`, `finnish`, `french`, `german`, `greek`, `hungarian`, `italian`, `japanese`, `koreana`, `latam`, `norwegian`, `polish`, `portuguese`, `romanian`, `russian`, `schinese`, `schinese_pw`, `spanish`, `swedish`, `tchinese`, `thai`, `turkish`, `ukrainian`, `vietnamese`.
+
+### Utility APIs
+
+| API | Description |
+|---|---|
+| `await csgo.ready()` | Wait for enricher data to be loaded. Returns a Promise. |
+| `csgo.init(opts)` | Re-initialize enricher with custom options (see below) |
+| `csgo.manifestId` | CS2 manifest ID of the currently loaded schema data (read-only) |
+| `csgo.on('enricherReady', fn)` | Emitted when enricher data is loaded and inventory is enriched |
+| `csgo.on('enricherError', fn)` | Emitted if enricher fails to load data |
+
+#### `init(opts)` Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `dataDir` | string | `./cs2-inventory-schema` | Custom data directory |
+| `defaultLanguage` | string | `schinese` | Language for the `name` field. Auto-downloaded if not schinese/english |
+| `languages` | string[] | `[]` | Additional languages for `name_{lang}` fields |
+| `checkIntervalHours` | number | `24` | Update check interval |
+| `forceUpdate` | boolean | `false` | Force re-download all files |
+
+### Data Source & Auto-Update
+
+Item schema data is automatically downloaded from [ByMykel/counter-strike-file-tracker](https://github.com/ByMykel/counter-strike-file-tracker):
+
+- **First use**: Downloads ~20MB (items_game + schinese + english JSON)
+- **Each startup**: Checks GitHub API for SHA changes (~3KB). Downloads only if updated or if 24 hours have passed since last download.
+- **Cache location**: `./cs2-inventory-schema/` (add to `.gitignore`)
+- **Force update**: `npx cs2-inventory-kit-fetch --force`
+
+---
 
 ## Install
 
@@ -39,446 +133,25 @@ const GlobalOffensive = require('cs2-inventory-kit');
 let user = new SteamUser();
 let csgo = new GlobalOffensive(user);
 
+// Enricher is automatic — items will have name, hash_name, rarity_name, etc.
 csgo.on('connectedToGC', () => {
-    console.log('Connected to GC!');
     console.log(`Inventory: ${csgo.inventory.length} items`);
+    csgo.inventory.forEach(item => {
+        console.log(`${item.name} (${item.exterior_name}) [${item.rarity_name}]`);
+    });
 });
 
-// Keychain support
+// Keychain charges
 csgo.on('keychainCharges', (charges) => {
     console.log(`Keychain removal tool charges: ${charges}`);
 });
 
 user.logOn({ refreshToken: 'your-refresh-token' });
 user.on('loggedOn', () => {
-    user.gamesPlayed([730]); // Connect to CS2 GC
+    user.gamesPlayed([730]);
 });
 ```
 
-# Enums
+## License
 
-There are some enums that are used by various methods and events. You can find them in `enums.js`.
-
-# Properties
-
-There are a few useful read-only properties available to you.
-
-### haveGCSession
-
-`true` if we're currently connected to the GC, `false` otherwise. You should only call methods when we have an active GC session.
-
-### accountData
-
-A big object containing account data and some statistics including players in-game. Undefined until `accountData` is emitted.
-
-### inventory
-
-An array containing the items in your inventory. Undefined until `connectedToGC` is emitted.
-
-As of v2.2.0, some special properties are populated on items in this array (and also item objects in `itemAcquired` and
-related events), where applicable:
-
-- `position` - This item's position in your inventory. If the item is new and unacknowledged, this is `0`
-- `custom_name` - This item's custom name, applied via name tag
-- `paint_index` - The item's paint index
-- `paint_seed` - The item's paint seed
-- `paint_wear` - The item's paint wear, as a float (often ignorantly referred to as "float value")
-- `kill_eater_value` - Tracked stat value for StatTrak weapons
-- `kill_eater_score_type` - What type of stat is tracked for StatTrak weapons. Currently only 0 (Kills) is available.
-- `quest_id`
-- `tradable_after` - A `Date` object representing when this item will become tradable. May be a date in the past, as this is not removed when the date is reached.
-- `stickers` - An array of objects:
-    - `slot` - The sticker slot number, 0-5
-    - `sticker_id`
-    - `wear` - The sticker's wear (how scratched it is), as a float. `null` if not scratched at all.
-    - `scale` - Float, `null` if not applicable
-    - `rotation` - Float, `null` if not applicable
-    - `tint_id`
-    - `offset_x` - Float, `null` if not applicable
-    - `offset_y` - Float, `null` if not applicable
-- `casket_id` - If this item is contained in a casket (storage unit), this is a string containing that casket's item ID
-- `casket_contained_item_count` - If this item is a casket (storage unit), this is a count of how many items it contains
-
-Note that if any of the above attributes are not applicable, then they will not exist in the item object.
-
-It appears that under some circumstances, the GC might load items from storage units into your inventory without
-calling [`getCasketContents`](#getcasketcontentscasketid-callback), so if you are using this property to see what items
-are in your inventory, you will need to check `casket_id` to filter out items stored in storage units.
-
-# Methods
-
-### Constructor(steamClient)
-
-When instantiating your node-globaloffensive instance, you need to pass your active Steam.SteamClient instance as the sole parameter, as shown here:
-
-```js
-var csgo = new GlobalOffensive(steamClient);
-```
-
-### requestGame(shareCodeOrDetails)
-- `shareCodeOrDetails` - Either a share code as a string, or an object containing properties `matchId`, `outcomeId`, `token`
-
-**v2.2.0 or later is required to use this method**
-
-Requests stats for a historical game. Listen for the `matchList` event to get your response.
-
-### requestLiveGames()
-
-Request a list of current live tournament games.
-This is the list you see in the client under Watch -> Live.
-Listen for the `matchList` event to get your response.
-
-### requestRecentGames(steamid)
-
-Request a list of recent games (max. 8). This is the list you see in the client under Watch -> Your Matches.
-Listen for the `matchList` event to get your response.
-
-### requestLiveGameForUser(steamid)
-
-Request live game info for a specific user. Listen for the `matchList` event to get your response.
-
-### inspectItem(owner[, assetid][, d][, callback])
-- `owner` - The numeric SteamID or market listing ID of the owning Steam account or market listing, as a string; or an entire inspect link.
-- `assetid` - If `owner` is not an entire inspect link, this is the numeric asset ID of this item, as a string
-- `d` - If `owner` is not an entire inspect link, this is the "D" number from the inspect link (the last number following the "D" character)
-- `callback` - Optional. Called if all parameters are valid when Steam responds to us.
-	- `item` - An object containing the item's data
-		- `accountid` - Seems to always be `null`
-		- `itemid` - The item's asset ID, as a string
-		- `defindex` - The item's definition index
-		- `paintindex` - The item's paint index
-		- `rarity` - The item's numeric rarity
-		- `quality` - The item's numeric quality
-		- `paintwear` - The item's paint wear percentage, as a float between 0 and 1 (frequently and incorrectly called "float value")
-		- `paintseed` - The item's paint seed
-		- `killeaterscoretype` - What kind of statistic the StatTrak version of this item tracks (may be `null` if not StatTrak)
-		- `killeatervalue` - The item's tracked statistic value (kills)
-		- `customname` - The item's custom name via a name tag, or `null` if none
-		- `stickers` - An array of objects describing the stickers applied to this item
-			- `slot` - What slot this sticker is applied to
-			- `sticker_id` - The ID of this type of sticker
-			- `wear` - Either `null` (not scratched) or a float between 0 and 1 describing how much this sticker has been scratched
-			- `scale` - This property is only not null on the early dreamhack 2013 stickers. It is no longer used.
-			- `rotation` - This property is only not null on the early dreamhack 2013 stickers. It is no longer used.
-			- `tint_id`
-			- `offset_x` - Float, `null` if not applicable
-            - `offset_y` - Float, `null` if not applicable
-            - `offset_z` - Float, `null` if not applicable
-            - `pattern` - Integer, `null` if not applicable
-		- `inventory` - An integer which has no use to you
-		- `origin` - The numeric origin of this item
-		- `questid` - You can ignore this
-		- `dropreason`
-		- `musicindex`
-		- `entindex`
-        - `petindex`
-        - `keychains` - An array of objects with identical structure to `stickers`, but for keychains
-
-**v1.1.0 or later is required to use this method**
-
-Sends the same request to the GC that the official client sends when you inspect an item. If all parameters are correct
-and the GC is in a good mood, returns the item's data. Using this for an item your account owns is useless as all
-the data is already available in `inventory`.
-
-The response will arrive in the callback and in the `inspectItemInfo` event.
-
-As of v2.1.0, the request will time out if no response is received in 10 seconds. If this happens,
-[`inspectItemTimedOut`](#inspectitemtimedout) will be emitted.
-
-### requestPlayersProfile(steamid[, callback])
-- `steamid` - The numeric SteamID of the Steam account to pull profile data for. Needs to be playing CSGO and be on the friend list of the requesting account.
-- `callback` - Optional. Called if all parameters are valid when Steam responds to us.
-	- `profile` - An object containing the profiledata
-		- `account_id` - Steam account id
-		- `ongoingmatch`
-		- `global_stats` - Seems to always be `null`
-		- `penalty_seconds`
-		- `penalty_reason`
-		- `vac_banned`
-		- `ranking`
-			- `account_id`
-			- `rank_id` - Rank (0-18), starting at 0 for unranked
-			- `wins` - Number of wins
-			- `rank_change` - Seems to always be `null`
-			- `rank_type_id` - Rank type (6: Matchmaking, 7: Wingman, 10: Danger Zone)
-		- `commendation`
-			- `cmd_friendly` - The number of "friendly" commendations the account has received
-			- `cmd_teaching` - The number of "teaching" commendations the account has received
-			- `cmd_leader` - The number of "leader" commendations the account has received
-		- `medals` - Achievement medals, their ranks and coins
-			- `medal_team`
-			- `medal_combat`
-			- `medal_weapon`
-			- `medal_global`
-			- `medal_arms`
-			- `display_items_defidx` - Array of coins
-			- `featured_display_item_defidx`
-		- `my_current_event`
-		- `my_current_event_teams`
-		- `my_current_team`
-		- `my_current_event_stages`
-		- `survey_vote`
-		- `activity`
-		- `player_level` - Private rank level
-		- `player_cur_xp` - Current XP, starting at 327680000 (level % = (player_cur_xp - 327680000) / 5000)
-		- `player_xp_bonus_flags` - Seems to always be `null`
-		- `rankings` - Array of ranking infos
-			- `account_id`
-			- `rank_id` - Rank (0-18), starting at 0 for unranked
-			- `wins` - Number of wins
-			- `rank_change` - Seems to always be `null`
-			- `rank_type_id` - Rank type (6: Matchmaking, 7: Wingman, 10: Danger Zone)
-	
-**v1.2.0 or later is required to use this method**
-
-Sends the same request to the GC that viewing the CSGO player profile from the in-game friendlist sends. Returns the same information that you would get in-game.
-This returns the same protobuf that is used when you request your own profile data, so most of it stays empty.
-
-### nameItem(nameTagId, itemId, name)
-- `nameTagId` - The ID of the name tag you want to consume to do this
-- `itemId` - The ID of the item you want to rename
-- `name` - A string containing the item's new name
-
-**v2.1.0 or later is required to use this method**
-
-Renames a particular item in your inventory, using a given name tag. You can rename storage units for free by passing
-`0` as the `nameTagId`.
-
-### craft(items, recipe)
-- `items` - An array of item IDs to craft
-- `recipe` - An integer indicating which crafting recipe to use
-
-**v2.3.0 or later is required to use this method**
-
-Craft `items` together into a new item using a specific `recipe`. `items` should be an array of item IDs to craft.
-You will receive a [`craftingComplete`](#craftingcomplete) event in response. If crafting succeeded, you will also get
-[`itemRemoved`](#itemremoved) events for each item you spent, and [`itemAcquired`](#itemacquired) events for each item
-you received.
-
-Recipes are defined in items_game.txt. Available recipes as of late 2022 are:
-
-- 0 = Trade-Up: 10x Consumer Grade → 1x Industrial Grade
-- 1 = Trade-Up: 10x Industrial Grade → 1x Mil-Spec Grade
-- 2 = Trade-Up: 10x Mil-Spec Grade → 1x Restricted
-- 3 = Trade-Up: 10x Restricted → 1x Classified
-- 4 = Trade-Up: 10x Classified → 1x Covert
-- 10 = Trade-Up: 10x StatTrak Consumer Grade → 1x StatTrak Industrial Grade
-- 11 = Trade-Up: 10x StatTrak Industrial Grade → 1x StatTrak Mil-Spec Grade
-- 12 = Trade-Up: 10x StatTrak Mil-Spec Grade → 1x StatTrak Restricted
-- 13 = Trade-Up: 10x StatTrak Restricted → 1x StatTrak Classified
-- 14 = Trade-Up: 10x StatTrak Classified → 1x StatTrak Covert
-
-### deleteItem(itemId)
-- `itemId` - The ID of the item you want to delete
-
-**1.3.0 or later is required to use this method**
-
-Deletes a particular item from your inventory. **This is a destructive operation, which cannot be undone.**
-
-### addToCasket(casketId, itemId)
-- `casketId` - The ID of the casket (storage unit) you want to put an item into
-- `itemId` - The ID of the item you want to put into the casket
-
-**v2.1.0 or later is required to use this method**
-
-Put an item in your inventory into a casket (storage unit) you own. Assuming the request succeeds,
-[`itemRemoved`](#itemremoved) will be emitted for the item that was put into the casket, and
-[`itemCustomizationNotification`](#itemcustomizationnotification) will be emitted with notification type
-`CasketAdded` for the casket.
-
-### removeFromCasket(casketId, itemId)
-- `casketId` - The ID of the casket (storage unit) you want to remove an item from
-- `itemId` - The ID of the item you want to remove from the casket
-
-**v2.1.0 or later is required to use this method**
-
-Remove an item from a casket (storage unit) you own and put it into your inventory. Assuming the request succeeds,
-[`itemAcquired`](#itemremoved) will be emitted for the item that was removed from the casket, and
-[`itemCustomizationNotification`](#itemcustomizationnotification) will be emitted with notification type
-`CasketRemoved` for the casket.
-
-### getCasketContents(casketId, callback)
-- `casketId` - The ID of the casket (storage unit) you want to get the contents of
-- `callback` - A function to be called once the contents are loaded
-    - `err` - An `Error` object on failure, or `null` on success
-    - `items` - An array of item objects, the same structure as objects in [`inventory`](#inventory)
-
-**v2.1.0 or later is required to use this method**
-
-Loads the contents of a storage unit. Note that calling this will have the GC load the contents of the storage unit
-using the same mechanism as your actual inventory, so items in the storage unit will appear in the [`inventory`](#inventory)
-property, and `itemAcquired` will be emitted for each item. Each item in your [`inventory`](#inventory) that is contained
-inside of a storage unit has a property `casket_id`, the value of which is a string containing the ID of the storage unit
-that contains that item.
-
-It appears that under some circumstances, the GC might load these items into your inventory without calling this method,
-so if you are using [`inventory`](#inventory) to see what items are in your inventory, you will need to check `casket_id`
-to filter out items stored in storage units.
-	
-# Events
-
-### connectedToGC
-
-Emitted when a GC connection is established. You shouldn't use any methods before you receive this. Note that this may be received (after it's first emitted) without any disconnectedFromGC event being emitted. In this case, the GC simply restarted.
-
-### disconnectedFromGC
-- `reason` - A value from the `GCConnectionStatus` enum
-
-Emitted when we're disconnected from the GC for any reason. node-globaloffensive will automatically try to reconnect and will emit `connectedToGC` when reconnected.
-
-Example usage:
-
-```js
-const GlobalOffensive = require('globaloffensive');
-let csgo = new GlobalOffensive(steamUser);
-
-csgo.on('disconnectedFromGC', (reason) => {
-    if (reason == GlobalOffensive.GCConnectionStatus.GC_GOING_DOWN) {
-        console.log('GC going down');    
-    }
-});
-```
-
-### error
-- `err` - An `Error` object
-
-Emitted when we encounter a fatal error attempting to connect to the GC. If this event is not handled, the app will crash.
-
-### connectionStatus
-- `status` - A value from the `GCConnectionStatus` enum
-- `data` - The raw data that was received
-
-Emitted when we receive the status of our connection to the GC. Exactly when this is emitted is currently unknown. **This may be removed in the future.**
-
-### matchList
-- `matches` - An array of matches
-- `data` - The raw data that was received
-
-Emitted when we receive a match list, especially after a `requestLiveGames()` call. This may be emitted at other times. Presently, the exact behavior is unknown.
-
-### inspectItemInfo
-- `item` - An object containing the item's data
-	- `accountid` - Seems to always be `null`
-	- `itemid` - The item's asset ID, as a string
-	- `defindex` - The item's definition index
-	- `paintindex` - The item's paint index
-	- `rarity` - The item's numeric rarity
-	- `quality` - The item's numeric quality
-	- `paintwear` - The item's paint wear percentage, as a float between 0 and 1 (frequently and incorrectly called "float value")
-	- `paintseed` - The item's paint seed
-	- `killeaterscoretype` - What kind of statistic the StatTrak version of this item tracks (may be `null` if not StatTrak)
-	- `killeatervalue` - The item's tracked statistic value (kills)
-	- `customname` - The item's custom name via a name tag, or `null` if none
-	- `stickers` - An array of objects describing the stickers applied to this item
-		- `slot` - What slot this sticker is applied to
-		- `sticker_id` - The ID of this type of sticker
-		- `wear` - Either `null` (not scratched) or a float between 0 and 1 describing how much this sticker has been scratched
-		- `scale` - Always `null`?
-		- `rotation` - Always `null`?
-		- `tint_id`
-        - `offset_x` - Float, `null` if not applicable
-        - `offset_y` - Float, `null` if not applicable
-	- `inventory` - An integer which has no use to you
-	- `origin` - The numeric origin of this item
-	- `questid` - You can ignore this
-	- `dropreason`
-	- `musicindex`
-	- `entindex`
-
-**v1.1.0 or later is required to use this method**
-
-Emitted in response to an `inspectItem()` call.
-
-### inspectItemTimedOut
-- `assetid` - The asset ID of the item we attempted to inspect
-
-**v2.1.0 or later is required to use this method**
-
-Emitted if `inspectItem()` is called but we don't receive a timely reply to the request.
-
-### itemAcquired
-- `item` - The item that you received
-
-Emitted when you receive a new item.
-
-### itemChanged
-- `oldItem` - The item's previous state
-- `item` - The item's new state
-
-Emitted when an item in your inventory changes in some way.
-
-### itemRemoved
-- `item` - The item that you lost
-
-Emitted when an item is removed from your inventory.
-
-### itemCustomizationNotification
-- `itemIds` - An array of item IDs (as strings) to which something happened
-- `notificationType` - A value from the `ItemCustomizationNotification` enum
-
-**v2.1.0 or later is required to use this event**
-
-Emitted when the GC informs us that an item is customized somehow. Example:
-
-```js
-const GlobalOffensive = require('globaloffensive');
-let csgo = new GlobalOffensive(steamUser);
-
-csgo.on('itemCustomizationNotification', (itemIds, notificationType) => {
-    if (notificationType == GlobalOffensive.ItemCustomizationNotification.CasketInvFull) {
-        console.log('Storage unit ' + itemIds[0] + ' is full');
-    }
-});
-```
-
-### craftingComplete
-- `recipe` - The ID of the recipe that was used to perform this craft, or -1 on failure
-- `itemsGained` - An array of IDs of items that were gained as a result of this craft
-
-**v2.3.0 or later is required to use this event**
-
-Emitted when a craft initiated by the [`craft`](#craftitems-recipe) method finishes.
-
-### playersProfile
-- `profile` - An object containing the profile data
-	- `account_id` - Steam account id
-	- `ongoingmatch`
-	- `global_stats` - Seems to always be `null`
-	- `penalty_seconds`
-	- `penalty_reason`
-	- `vac_banned`
-	- `ranking`
-		- `account_id`
-		- `rank_id` - Rank (0-18), starting at 0 for unranked
-		- `wins` - Number of wins
-		- `rank_change` - Seems to always be `null`
-		- `rank_type_id` - Rank type (6: Matchmaking, 7: Wingman, 10: Danger Zone)
-	- `commendation`
-		- `cmd_friendly` - The number of "friendly" commendations the account has received
-		- `cmd_teaching` - The number of "teaching" commendations the account has received
-		- `cmd_leader` - The number of "leader" commendations the account has received
-	- `medals` - Achievement medals, their ranks and coins
-		- `medal_team`
-		- `medal_combat`
-		- `medal_weapon`
-		- `medal_global`
-		- `medal_arms`
-		- `display_items_defidx` - Array of coins
-		- `featured_display_item_defidx`
-	- `my_current_event`
-	- `my_current_event_teams`
-	- `my_current_team`
-	- `my_current_event_stages`
-	- `survey_vote`
-	- `activity`
-	- `player_level` - Private rank level
-	- `player_cur_xp` - Current XP, starting at 327680000 (level % = (player_cur_xp - 327680000) / 5000)
-	- `player_xp_bonus_flags` - Seems to always be `null`
-	- `rankings` - Array of ranking infos
-		- `account_id`
-		- `rank_id` - Rank (0-18), starting at 0 for unranked
-		- `wins` - Number of wins
-		- `rank_change` - Seems to always be `null`
-		- `rank_type_id` - Rank type (6: Matchmaking, 7: Wingman, 10: Danger Zone)
-
-Emitted in response to an `requestPlayersProfile()` call.
+MIT. See [LICENSE](./LICENSE).

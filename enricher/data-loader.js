@@ -43,8 +43,14 @@ class DataLoader {
      * @returns {Promise<object>} { itemsGame, schinese, english, extraLanguages, manifestId }
      */
     async load(opts = {}) {
-        const { forceUpdate = false, languages = [], checkIntervalHours = 24 } = opts;
+        const { forceUpdate = false, checkIntervalHours = 24, defaultLanguage } = opts;
+        let languages = opts.languages || [];
         if (!fs.existsSync(this.dataDir)) fs.mkdirSync(this.dataDir, { recursive: true });
+
+        // 如果 defaultLanguage 不是 schinese/english，自动加入下载列表
+        if (defaultLanguage && defaultLanguage !== 'schinese' && defaultLanguage !== 'english' && !languages.includes(defaultLanguage)) {
+            languages = [...languages, defaultLanguage];
+        }
 
         // 构建动态文件列表：默认 3 个 + 额外语言
         const files = [...DEFAULT_FILES];
@@ -73,6 +79,7 @@ class DataLoader {
             schinese: this.readJson('csgo_schinese.json'),
             english: this.readJson('csgo_english.json'),
             extraLanguages: {},
+            defaultLanguage: defaultLanguage || 'schinese',
             manifestId: cache.manifestId,
         };
 

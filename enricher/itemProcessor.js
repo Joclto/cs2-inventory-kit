@@ -18,10 +18,31 @@ class ItemProcessor {
         this.translation = {};
         this.englishTranslation = {};
         this.extraTranslations = {};
+        this.defaultLanguage = data.defaultLanguage || 'schinese';
+        this.defaultTranslation = {};
 
         this.loadItemsGame(data.itemsGame);
         this.loadTranslations(data.schinese);
         this.loadEnglishTranslations(data.english);
+
+        // 加载额外语言
+        if (data.extraLanguages) {
+            for (const [lang, langData] of Object.entries(data.extraLanguages)) {
+                this.setExtraLanguage(lang, langData);
+            }
+        }
+
+        this._updateDefaultTranslation();
+    }
+
+    _updateDefaultTranslation() {
+        if (this.defaultLanguage === 'schinese') {
+            this.defaultTranslation = this.translation;
+        } else if (this.defaultLanguage === 'english') {
+            this.defaultTranslation = this.englishTranslation;
+        } else {
+            this.defaultTranslation = this.extraTranslations[this.defaultLanguage] || this.translation;
+        }
     }
 
     // ============================================================
@@ -122,9 +143,9 @@ class ItemProcessor {
             result.item_set = this.getCaseName(storageRow);
             result.pendant = this.getPendant(storageRow);
 
-            // 磨损相关
+            // 磨损相关（exterior_name 固定英文标准名）
             if (storageRow.paint_wear !== undefined) {
-                result.exterior_name = this.getPaintWearName(storageRow.paint_wear);
+                result.exterior_name = this.getPaintWearNameEnglish(storageRow.paint_wear);
                 result.market_name = result.name + ' (' + result.exterior_name + ')';
             }
 
@@ -222,11 +243,11 @@ class ItemProcessor {
 
     getItemName(storageRow, customTranslation) {
         const defIndexResult = this.getDefIndex(storageRow.def_index);
-        const trans = customTranslation || this.translation;
+        const trans = customTranslation || this.defaultTranslation;
         const getTrans = (key) => {
             if (!key) return '';
             const formattedKey = key.replace('#', '').toLowerCase();
-            const val = trans[formattedKey] || this.translation[formattedKey];
+            const val = trans[formattedKey] || this.defaultTranslation[formattedKey];
             return val ? val.replaceAll('"', '') : key;
         };
 

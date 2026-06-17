@@ -130,13 +130,6 @@ GlobalOffensive.prototype._initEnricher = function(opts) {
 		this._itemProcessor = new ItemProcessor(data);
 		this._manifestId = data.manifestId;
 
-		// 注册额外语言
-		if (data.extraLanguages) {
-			for (const [lang, langData] of Object.entries(data.extraLanguages)) {
-				this._itemProcessor.setExtraLanguage(lang, langData);
-			}
-		}
-
 		// 富化已有 inventory
 		if (this.inventory && this.inventory.length > 0) {
 			this.inventory.forEach((item) => this._enrichItem(item));
@@ -196,14 +189,15 @@ GlobalOffensive.prototype.ready = function() {
  * @param {string} [opts.dataDir] - Custom data directory (default: ./cs2-inventory-schema)
  * @param {string[]} [opts.languages] - Additional languages for item name translation.
  *   Each language adds a `name_{lang}` field to item objects (e.g. name_french).
- *   Default: schinese (name) + english (hash_name).
- *   Supported keywords:
- *     brazilian, bulgarian, czech, danish, dutch, english, finnish,
- *     french, german, greek, hungarian, italian, japanese, koreana,
- *     latam, norwegian, polish, portuguese, romanian, russian,
- *     schinese, schinese_pw, spanish, swedish, tchinese, thai,
- *     turkish, ukrainian, vietnamese
+ *   Supported keywords: brazilian, bulgarian, czech, danish, dutch, english, finnish,
+ *     french, german, greek, hungarian, italian, japanese, koreana, latam, norwegian,
+ *     polish, portuguese, romanian, russian, schinese, schinese_pw, spanish, swedish,
+ *     tchinese, thai, turkish, ukrainian, vietnamese
  *   Example: init({ languages: ['french', 'japanese'] })
+ * @param {string} [opts.defaultLanguage] - Language for the `name` field (default: schinese).
+ *   If set to a language other than schinese/english, it will be auto-downloaded.
+ *   Example: init({ defaultLanguage: 'english' }) → item.name uses English translations.
+ *   `hash_name` and `exterior_name` are always English (market standard).
  * @param {number} [opts.checkIntervalHours] - Update check interval in hours (default 24)
  * @param {boolean} [opts.forceUpdate] - Force re-download all files
  */
