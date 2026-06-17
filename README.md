@@ -131,7 +131,7 @@ Supported keywords (29 languages): `brazilian`, `bulgarian`, `czech`, `danish`, 
 | API | Description |
 |---|---|
 | `await csgo.ready()` | Wait for enricher data to be loaded. Returns a Promise. |
-| `csgo.init(opts)` | Configure enricher options (languages, marks, dataDir, etc.). Called automatically on construction with defaults; call this to customize. |
+| `csgo.init(opts)` | Configure enricher options (languages, marks, dataDir, etc.). Called automatically on construction with defaults; call this to customize. **Each call replaces all previous options** (not merged). |
 | `csgo.manifestId` | CS2 manifest ID of the currently loaded schema data (read-only) |
 | `csgo.on('enricherReady', fn)` | Emitted when enricher data is loaded. If inventory is already available, it will be batch-enriched at this point. If not, items will be enriched automatically when GC connects. |
 | `csgo.on('enricherError', fn)` | Emitted if enricher fails to load data |
