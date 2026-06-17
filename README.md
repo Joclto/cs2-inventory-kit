@@ -1,10 +1,12 @@
+<div align="center">
+
+[![npm version](https://img.shields.io/npm/v/cs2-inventory-kit.svg)](https://npmjs.com/package/cs2-inventory-kit) [![npm downloads](https://img.shields.io/npm/dm/cs2-inventory-kit.svg)](https://npmjs.com/package/cs2-inventory-kit) [![Node.js Version](https://img.shields.io/node/v/cs2-inventory-kit.svg)](https://npmjs.com/package/cs2-inventory-kit) [![license](https://img.shields.io/github/license/Joclto/cs2-inventory-kit.svg)](https://github.com/Joclto/cs2-inventory-kit/blob/master/LICENSE) [![fork](https://img.shields.io/badge/fork%20of-node--globaloffensive-blue.svg)](https://github.com/DoctorMcKay/node-globaloffensive)
+
 # cs2-inventory-kit
 
-[![npm version](https://img.shields.io/npm/v/cs2-inventory-kit.svg)](https://npmjs.com/package/cs2-inventory-kit)
-[![license](https://img.shields.io/github/license/Joclto/cs2-inventory-kit.svg)](https://github.com/Joclto/cs2-inventory-kit/blob/master/LICENSE)
-[![fork](https://img.shields.io/badge/fork%20of-node--globaloffensive-blue.svg)](https://github.com/DoctorMcKay/node-globaloffensive)
-
 **Inventory-focused CS2 Game Coordinator library with built-in item data enrichment.**
+
+</div>
 
 ## Compatibility
 
