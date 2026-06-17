@@ -173,8 +173,11 @@ const GlobalOffensive = require('cs2-inventory-kit');
 let user = new SteamUser();
 let csgo = new GlobalOffensive(user);
 
-// Enricher is automatic — items will have name, hash_name, rarity_name, etc.
-csgo.on('connectedToGC', () => {
+csgo.on('connectedToGC', async () => {
+    // Wait for enricher to finish downloading item data (~20MB on first run)
+    await csgo.ready();
+
+    // Now all items are enriched with name, hash_name, rarity_name, etc.
     console.log(`Inventory: ${csgo.inventory.length} items`);
     csgo.inventory.forEach(item => {
         console.log(`${item.name} (${item.exterior_name}) [${item.rarity_name}]`);
