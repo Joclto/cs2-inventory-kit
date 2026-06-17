@@ -1,27 +1,32 @@
 {
-	"name": "globaloffensive",
-	"version": "3.3.0",
-	"description": "Exposes a simple API for interacting with the Counter-Strike: Global Offensive/CS2 game coordinator",
+	"name": "cs2-inventory-kit",
+	"version": "1.0.0",
+	"description": "Inventory-focused CS2 Game Coordinator library with built-in item data enrichment. Fork of node-globaloffensive.",
+	"main": "index.js",
+	"bin": {
+		"cs2-inventory-kit-fetch": "./bin/fetch-data.js"
+	},
 	"keywords": [
 		"csgo",
-		"cs:go",
-		"cs",
+		"cs2",
 		"counter strike",
 		"counter-strike",
-		"counter strike global offensive",
-		"counter-strike global offensive",
-		"global offensive",
-		"valve",
-		"steam"
+		"inventory",
+		"game-coordinator",
+		"steam",
+		"keychain",
+		"trade-up",
+		"node-globaloffensive"
 	],
-	"homepage": "https://github.com/DoctorMcKay/node-globaloffensive",
+	"homepage": "https://github.com/Joclto/cs2-inventory-kit",
 	"bugs": {
-		"url": "https://github.com/DoctorMcKay/node-globaloffensive/issues"
+		"url": "https://github.com/Joclto/cs2-inventory-kit/issues"
 	},
 	"license": "MIT",
+	"author": "Joclto",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/DoctorMcKay/node-globaloffensive.git"
+		"url": "https://github.com/Joclto/cs2-inventory-kit.git"
 	},
 	"dependencies": {
 		"@doctormckay/stdlib": "^2.10.0",
@@ -39,7 +44,8 @@
 		"steam-user": "^4.26.1"
 	},
 	"scripts": {
-		"generate-protos": "node scripts/generate-protos.js"
+		"generate-protos": "node scripts/generate-protos.js",
+		"fetch-data": "node bin/fetch-data.js"
 	},
 	"engines": {
 		"node": ">=14.0.0"
