@@ -131,9 +131,9 @@ Supported keywords (29 languages): `brazilian`, `bulgarian`, `czech`, `danish`, 
 | API | Description |
 |---|---|
 | `await csgo.ready()` | Wait for enricher data to be loaded. Returns a Promise. |
-| `csgo.init(opts)` | Re-initialize enricher with custom options (see below) |
+| `csgo.init(opts)` | Configure enricher options (languages, marks, dataDir, etc.). Called automatically on construction with defaults; call this to customize. |
 | `csgo.manifestId` | CS2 manifest ID of the currently loaded schema data (read-only) |
-| `csgo.on('enricherReady', fn)` | Emitted when enricher data is loaded and inventory is enriched |
+| `csgo.on('enricherReady', fn)` | Emitted when enricher data is loaded. If inventory is already available, it will be batch-enriched at this point. If not, items will be enriched automatically when GC connects. |
 | `csgo.on('enricherError', fn)` | Emitted if enricher fails to load data |
 
 #### `init(opts)` Options
@@ -154,7 +154,7 @@ Item schema data is automatically downloaded from [ByMykel/counter-strike-file-t
 - **First use**: Downloads ~20MB (items_game + schinese + english JSON)
 - **Each startup**: Checks GitHub API for SHA changes (~3KB). Downloads only if updated or if 24 hours have passed since last download.
 - **Cache location**: `./cs2-inventory-schema/` (add to `.gitignore`)
-- **Force update**: `npx cs2-inventory-kit-fetch --force`
+- **Force update**: `csgo.init({ forceUpdate: true })`
 
 ---
 
