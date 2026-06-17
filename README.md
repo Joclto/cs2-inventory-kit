@@ -103,6 +103,7 @@ When `marks` is provided, items will have these additional fields:
 | `quality_mark` | `quality_name` value | `"ST"` |
 | `exterior_mark` | `wear_category` value | `"JJ"` |
 | `itemset_mark` | `item_set` value | `"PRIN"` |
+| `mark` | Combined (all 4 required) | `"ST_SX_JJ_PRIN"` |
 
 If `marks` is not provided, these fields will not exist on item objects.
 

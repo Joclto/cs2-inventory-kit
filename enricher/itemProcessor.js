@@ -196,6 +196,11 @@ class ItemProcessor {
                 if (this.marks.itemset && result.item_set) {
                     result.itemset_mark = this.marks.itemset[result.item_set] || null;
                 }
+
+                // 组合 mark（4 个都有效才拼接，跟原版一致）
+                var markParts = [result.quality_mark, result.rarity_mark, result.exterior_mark, result.itemset_mark];
+                var allValid = markParts.every(function(m) { return m && m !== null && m !== undefined && m !== ''; });
+                result.mark = allValid ? markParts.join('_') : '';
             }
 
         } catch (error) {
