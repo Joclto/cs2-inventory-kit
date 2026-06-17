@@ -7,6 +7,9 @@ const Util = require('util');
 const Language = require('./language.js');
 const Protos = require('./protobufs/generated/_load.js');
 const {decode: decodeMaskedInspectLink} = require('./lib/inspect-link.js');
+const { DataLoader } = require('./enricher/data-loader.js');
+const { ItemProcessor } = require('./enricher/itemProcessor.js');
+const path = require('path');
 
 const STEAM_APPID = 730;
 
@@ -98,7 +101,114 @@ function GlobalOffensive(steam) {
 	this._steam.on('error', (err) => {
 		handleAppQuit(true);
 	});
+
+	// Enricher: 自动初始化（异步，不阻塞构造）
+	this._enricherReady = false;
+	this._itemProcessor = null;
+	this._dataLoader = null;
+	this._manifestId = null;
+	this._keychainCharges = null;
+
+	// Hook: 新物品/变更物品自动富化
+	this.on('itemAcquired', (item) => {
+		this._enrichItem(item);
+	});
+	this.on('itemChanged', (oldItem, newItem) => {
+		this._enrichItem(newItem);
+	});
+
+	// 启动 enricher（异步，不阻塞）
+	this._initEnricher();
 }
+
+GlobalOffensive.prototype._initEnricher = function(opts) {
+	opts = opts || {};
+	var dataDir = opts.dataDir || path.join(process.cwd(), 'cs2-inventory-schema');
+	this._dataLoader = new DataLoader(dataDir);
+
+	this._dataLoader.load(opts).then((data) => {
+		this._itemProcessor = new ItemProcessor(data);
+		this._manifestId = data.manifestId;
+
+		// 富化已有 inventory
+		if (this.inventory && this.inventory.length > 0) {
+			this.inventory.forEach((item) => this._enrichItem(item));
+			this.emit('debug', 'Enricher: batch-enriched ' + this.inventory.length + ' items');
+		}
+
+		this._enricherReady = true;
+		this.emit('enricherReady');
+		this.emit('debug', 'Enricher ready (manifest ' + (data.manifestId || 'unknown') + ')');
+	}).catch((err) => {
+		// enricher 初始化失败：更新所有物品的 msg
+		if (this.inventory && this.inventory.length > 0) {
+			var errMsg = 'enricher initialization failed: ' + err.message;
+			this.inventory.forEach((item) => {
+				item.msg = errMsg;
+			});
+		}
+		this.emit('debug', 'Enricher initialization failed: ' + err.message);
+		this.emit('enricherError', err);
+	});
+};
+
+GlobalOffensive.prototype._enrichItem = function(item) {
+	if (!this._itemProcessor) {
+		item.msg = 'enricher not ready';
+		return item;
+	}
+
+	try {
+		var enriched = this._itemProcessor.processItem(item);
+		Object.assign(item, enriched);
+		item.msg = null;
+	} catch (err) {
+		item.msg = err.message;
+	}
+
+	return item;
+};
+
+/**
+ * Wait for enricher data to be loaded and ready.
+ * @returns {Promise}
+ */
+GlobalOffensive.prototype.ready = function() {
+	if (this._enricherReady) {
+		return Promise.resolve();
+	}
+
+	return new Promise((resolve) => {
+		this.once('enricherReady', resolve);
+	});
+};
+
+/**
+ * Re-initialize enricher with custom options.
+ * @param {object} [opts]
+ * @param {string} [opts.dataDir] - Custom data directory
+ * @param {string[]} [opts.languages] - Additional languages (e.g. ['french'])
+ * @param {number} [opts.checkIntervalHours] - Update check interval (default 24)
+ * @param {boolean} [opts.forceUpdate] - Force re-download
+ */
+GlobalOffensive.prototype.init = function(opts) {
+	this._enricherReady = false;
+	this._initEnricher(opts);
+};
+
+// keychainCharges property (read-only, set by handlers.js SO type_id=15 handler)
+Object.defineProperty(GlobalOffensive.prototype, 'keychainCharges', {
+	get: function() {
+		return this._keychainCharges;
+	}
+});
+
+// manifestId property (read-only, set by enricher)
+Object.defineProperty(GlobalOffensive.prototype, 'manifestId', {
+	get: function() {
+		return this._manifestId;
+	}
+});
 
 GlobalOffensive.prototype._connect = function() {
 	if (!this._isInCSGO || this._helloTimer) {
