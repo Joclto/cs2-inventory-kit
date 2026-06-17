@@ -108,6 +108,7 @@ function GlobalOffensive(steam) {
 	this._dataLoader = null;
 	this._manifestId = null;
 	this._keychainCharges = null;
+	this._enricherGeneration = 0;
 
 	// Hook: 新物品/变更物品自动富化
 	this.on('itemAcquired', (item) => {
@@ -133,8 +134,16 @@ GlobalOffensive.prototype._initEnricher = function(opts) {
 	opts = opts || {};
 	var dataDir = opts.dataDir || path.join(process.cwd(), 'cs2-inventory-schema');
 	this._dataLoader = new DataLoader(dataDir);
+	this._enricherGeneration++;
+	var myGeneration = this._enricherGeneration;
 
 	this._dataLoader.load(opts).then((data) => {
+		// 检查是否是最新的初始化（防止构造函数和 init() 并行调用互相覆盖）
+		if (myGeneration !== this._enricherGeneration) {
+			this.emit('debug', 'Enricher: skipping outdated init (generation ' + myGeneration + ')');
+			return;
+		}
+
 		if (opts.marks) {
 			data.marks = opts.marks;
 		}

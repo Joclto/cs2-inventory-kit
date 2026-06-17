@@ -148,6 +148,10 @@ class ItemProcessor {
             if (storageRow.paint_wear !== undefined) {
                 result.exterior_name = this.getPaintWearNameEnglish(storageRow.paint_wear);
                 result.market_name = result.name + ' (' + result.exterior_name + ')';
+                // hash_name 也加英文磨损后缀
+                if (result.exterior_name) {
+                    result.hash_name = result.hash_name + ' (' + result.exterior_name + ')';
+                }
             }
 
             // Valve 原始标识符
