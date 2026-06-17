@@ -161,11 +161,6 @@ class ItemProcessor {
                 result.hash_name = '★ ' + result.hash_name;
             }
 
-            // 容器物品数量
-            if (storageRow.casket_contained_item_count !== undefined) {
-                result.item_storage_total = storageRow.casket_contained_item_count;
-            }
-
             // recipe（业务计算的汰换索引）
             if (storageRow.rarity) {
                 result.recipe = storageRow.rarity - 1;
@@ -399,6 +394,12 @@ class ItemProcessor {
         return this.englishTranslation[formattedKey]?.replaceAll('"', '') || key;
     }
 
+    getDefaultTranslation(key) {
+        if (!key) return '';
+        const formattedKey = key.replace('#', '').toLowerCase();
+        return this.defaultTranslation[formattedKey]?.replaceAll('"', '') || key;
+    }
+
     getPrefab(prefab) {
         return this.csgoItems.prefabs?.[prefab] || {};
     }
@@ -512,13 +513,13 @@ class ItemProcessor {
         if (keychainNameId !== null && this.csgoItems && this.csgoItems.keychain_definitions) {
             const keychainDef = this.csgoItems.keychain_definitions[keychainNameId.toString()];
             if (keychainDef && keychainDef.loc_name) {
-                keychainName = this.getTranslation(keychainDef.loc_name);
+                keychainName = this.getDefaultTranslation(keychainDef.loc_name);
             }
         }
 
         if (isStickerPanel && stickerKitId !== null) {
             const stickerDetails = this.getStickerDetails(stickerKitId);
-            const stickerNameCN = stickerDetails?.item_name ? this.getTranslation(stickerDetails.item_name) : '';
+            const stickerNameCN = stickerDetails?.item_name ? this.getDefaultTranslation(stickerDetails.item_name) : '';
             if (stickerNameCN) {
                 return '印花板 | ' + stickerNameCN;
             }
@@ -527,8 +528,8 @@ class ItemProcessor {
         if (highlightIndex !== null) {
             const highlightDef = this.csgoItems.highlight_reels?.[highlightIndex.toString()];
             const highlightIdStr = highlightDef?.id || '';
-            const reelCN = highlightIdStr ? this.getTranslation('#HighlightReel_' + highlightIdStr) : '';
-            const descCN = highlightIdStr ? this.getTranslation('#HighlightDesc_' + highlightIdStr) : '';
+            const reelCN = highlightIdStr ? this.getDefaultTranslation('#HighlightReel_' + highlightIdStr) : '';
+            const descCN = highlightIdStr ? this.getDefaultTranslation('#HighlightDesc_' + highlightIdStr) : '';
             const combined = [reelCN, descCN].filter(Boolean).join(' | ');
             if (combined) {
                 const prefix = keychainName || '高光时刻';

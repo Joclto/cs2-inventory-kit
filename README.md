@@ -55,11 +55,10 @@ Item objects in `inventory`, `itemAcquired`, `itemChanged`, and `getCasketConten
 | `rarity_name` | `"mythical_weapon"` | Valve identifier (from items_game `rarities`) |
 | `quality_name` | `"strange"` | Valve identifier (`normal` / `strange`) |
 | `wear_category` | `"wearcategory0"` | Valve identifier (from items_game `wear_blocks`) |
-| `recipe` | `4` or `14` | Trade-up recipe index (`rarity - 1`, +10 if StatTrak) |
+| `recipe` | `0`-`4` / `10`-`14` | Trade-up recipe index (`rarity - 1`, +10 if StatTrak) |
 | `item_set` | `"set_community_3"` | Original key from items_game `item_sets` |
-| `pendant` | `"挂件-1234"` | Keychain name from `keychain_definitions` |
-| `trade_protect` | `false` | Whether item has attribute `def_index=312` |
-| `item_storage_total` | `62` | Same as `casket_contained_item_count` |
+| `pendant` | `"挂件-1234"` | Keychain name (follows `defaultLanguage`) |
+| `trade_protect` | `false` | Whether item is gift-restricted (attribute `def_index=312`). Does NOT indicate Steam market tradability |
 | `msg` | `null` | Enrichment status: `null` = success, string = warning/error |
 
 > **Design principle**: Only Valve-native identifiers are used (e.g. `mythical_weapon`, not custom abbreviations like `SX`). Application-specific mappings should be done in your own code.
