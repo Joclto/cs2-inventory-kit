@@ -424,6 +424,33 @@ GlobalOffensive.prototype.getCasketContents = function(casketId, callback) {
 	this.on('itemCustomizationNotification', customizationNotification);
 };
 
+// Keychains
+/**
+ * Apply a keychain to an item. The keychain item will be consumed.
+ * @param {int} itemId - ID of the weapon/item to apply the keychain to
+ * @param {int} keychainId - ID of the keychain item (will be consumed)
+ * @param {int} [keychainSlot] - Optional slot number
+ */
+GlobalOffensive.prototype.applyKeychain = function(itemId, keychainId, keychainSlot) {
+	this._send(Language.ItemCustomizationNotification, Protos.CMsgGCItemCustomizationNotification, {
+		item_id: [itemId, keychainId],
+		request: GlobalOffensive.ItemCustomizationNotification.ApplyKeychain,
+		extra_data: keychainSlot !== undefined ? [keychainSlot] : []
+	});
+};
+
+/**
+ * Remove a keychain from an item. This operation consumes one keychain removal tool charge.
+ * Fire-and-forget: no callback, no confirmation event.
+ * @param {int} itemId - ID of the weapon/item to remove the keychain from
+ */
+GlobalOffensive.prototype.removeKeychain = function(itemId) {
+	this._send(Language.ApplySticker, Protos.CMsgApplySticker, {
+		sticker_item_id: '17293822569102704705',
+		item_item_id: itemId
+	});
+};
+
 GlobalOffensive.prototype._handlers = {};
 
 require('./enums.js');
