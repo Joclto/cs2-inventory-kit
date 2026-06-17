@@ -107,6 +107,14 @@ When `marks` is provided, items will have these additional fields:
 
 If `marks` is not provided, these fields will not exist on item objects.
 
+When `marks` is provided, a combined `mark` field is **automatically generated** — it joins all 4 marks with `_` (only when all 4 are non-null):
+
+```
+mark = quality_mark + "_" + rarity_mark + "_" + exterior_mark + "_" + itemset_mark
+```
+
+Example: `"ST_SX_ZX_PRIN"`. If any of the 4 marks is null, `mark` will be an empty string `""`.
+
 #### Multi-Language Support
 
 The `name` field uses **Simplified Chinese** by default. `hash_name` and `exterior_name` are always English (market standard).
