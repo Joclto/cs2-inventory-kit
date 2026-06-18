@@ -55,8 +55,10 @@ const GlobalOffensive = require('cs2-inventory-kit');
 |---|---|---|
 | `name` | `"★ Karambit \| Fade"` | items_game + 默认语言翻译 |
 | `hash_name` | `"★ Karambit \| Fade (Factory New)"` | items_game + 英文翻译（市场标准） |
-| `exterior_name` | `"Factory New"` | 英文磨损名称（由 `paint_wear` 推导） |
-| `market_name` | `"★ Karambit \| Fade (Factory New)"` | `name` + `exterior_name` |
+| `exterior_name` | `"Factory New"` | 英文磨损名称（由 `paint_wear` 推导）。始终为英文，用于向后兼容和市场标准 |
+| `market_name` | `"★ Karambit \| Fade (Factory New)"` | `name` + `exterior_name`（英文磨损） |
+| `exterior_name_local` | `"崭新出厂"` | 本地化磨损名称，跟随 `defaultLanguage`。翻译不可用时省略 |
+| `market_name_local` | `"★ Karambit \| Fade (崭新出厂)"` | `name` + `exterior_name_local`。仅当 `exterior_name_local` 存在时才有 |
 | `rarity_name` | `"mythical_weapon"` | Valve 标识符（来自 items_game 的 `rarities`） |
 | `quality_name` | `"strange"` | Valve 标识符（`normal` / `strange`） |
 | `wear_category` | `"wearcategory0"` | Valve 标识符（来自 items_game 的 `wear_blocks`） |
@@ -129,12 +131,12 @@ csgo.init({ defaultLanguage: 'english' });
 // item.name = "★ Karambit | Fade"（英文）
 ```
 
-为 `name_{lang}` 字段添加更多语言：
+为 `name_{lang}` 字段添加更多语言。每个额外语言还会同时生成本地化的磨损字段 `exterior_name_{lang}` 和 `market_name_{lang}`（当物品有磨损且对应翻译存在时）：
 
 ```js
 csgo.init({
-    defaultLanguage: 'french',         // item.name → 法语
-    languages: ['japanese', 'tchinese'] // item.name_japanese, item.name_tchinese
+    defaultLanguage: 'french',         // item.name / exterior_name_local / market_name_local → 法语
+    languages: ['japanese', 'tchinese'] // item.name_japanese、item.exterior_name_japanese、item.market_name_japanese ……（tchinese 同理）
 });
 ```
 

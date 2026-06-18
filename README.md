@@ -55,8 +55,10 @@ Item objects in `inventory`, `itemAcquired`, `itemChanged`, and `getCasketConten
 |---|---|---|
 | `name` | `"★ Karambit \| Fade"` | items_game + default language translation |
 | `hash_name` | `"★ Karambit \| Fade (Factory New)"` | items_game + english translation (market standard) |
-| `exterior_name` | `"Factory New"` | English wear name (derived from `paint_wear`) |
-| `market_name` | `"★ Karambit \| Fade (Factory New)"` | `name` + `exterior_name` |
+| `exterior_name` | `"Factory New"` | English wear name (derived from `paint_wear`). Always English for backward compat & market standard |
+| `market_name` | `"★ Karambit \| Fade (Factory New)"` | `name` + `exterior_name` (English wear) |
+| `exterior_name_local` | `"崭新出厂"` | Localized wear name following `defaultLanguage`. Omitted when translation unavailable |
+| `market_name_local` | `"★ Karambit \| Fade (崭新出厂)"` | `name` + `exterior_name_local`. Only present when `exterior_name_local` is |
 | `rarity_name` | `"mythical_weapon"` | Valve identifier (from items_game `rarities`) |
 | `quality_name` | `"strange"` | Valve identifier (`normal` / `strange`) |
 | `wear_category` | `"wearcategory0"` | Valve identifier (from items_game `wear_blocks`) |
@@ -129,12 +131,12 @@ csgo.init({ defaultLanguage: 'english' });
 // item.name = "★ Karambit | Fade" (English)
 ```
 
-Add more languages for `name_{lang}` fields:
+Add more languages for `name_{lang}` fields. Each extra language also produces localized wear fields `exterior_name_{lang}` and `market_name_{lang}` (when the item has wear and the translation exists):
 
 ```js
 csgo.init({
-    defaultLanguage: 'french',         // item.name → French
-    languages: ['japanese', 'tchinese'] // item.name_japanese, item.name_tchinese
+    defaultLanguage: 'french',         // item.name / exterior_name_local / market_name_local → French
+    languages: ['japanese', 'tchinese'] // item.name_japanese, item.exterior_name_japanese, item.market_name_japanese, ... (same for tchinese)
 });
 ```
 
