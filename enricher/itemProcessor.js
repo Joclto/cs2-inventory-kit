@@ -91,8 +91,8 @@ class ItemProcessor {
         const finalDict = {};
         const tokens = jsonData?.lang?.Tokens || jsonData?.Tokens || jsonData || {};
         for (const [key, value] of Object.entries(tokens)) {
-            if (typeof value === 'string') {
-                finalDict[key.toLowerCase()] = value;
+            if (value !== null && value !== undefined) {
+                finalDict[key.toLowerCase()] = String(value);
             }
         }
         return finalDict;
