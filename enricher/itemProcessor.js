@@ -145,28 +145,37 @@ class ItemProcessor {
             result.pendant = this.getPendant(storageRow);
 
             // 磨损相关
-            // - exterior_name / market_name / hash_name: 固定英文（向后兼容 + 市场规范）
-            // - exterior_name_local / market_name_local: 跟随 defaultLanguage
+            // - exterior_name / market_name: 跟随 defaultLanguage
+            // - hash_name: 始终英文（市场标准，独立查英文磨损）
             if (storageRow.paint_wear !== undefined) {
-                result.exterior_name = this.getPaintWearNameEnglish(storageRow.paint_wear);
-                result.market_name = result.name + ' (' + result.exterior_name + ')';
-                // hash_name 也加英文磨损后缀
-                if (result.exterior_name) {
-                    result.hash_name = result.hash_name + ' (' + result.exterior_name + ')';
+                const exteriorName = this.getWearNameLocalized(storageRow.paint_wear, this.defaultTranslation);
+                if (exteriorName) {
+                    result.exterior_name = exteriorName;
+                    result.market_name = result.name + ' (' + exteriorName + ')';
                 }
-                // 本地化磨损名（跟随 defaultLanguage）
-                const exteriorNameLocal = this.getWearNameLocalized(storageRow.paint_wear, this.defaultTranslation);
-                if (exteriorNameLocal) {
-                    result.exterior_name_local = exteriorNameLocal;
-                    result.market_name_local = result.name + ' (' + exteriorNameLocal + ')';
+                // hash_name 始终用英文磨损（市场规范）
+                const englishWear = this.getPaintWearNameEnglish(storageRow.paint_wear);
+                if (englishWear) {
+                    result.hash_name = result.hash_name + ' (' + englishWear + ')';
                 }
             }
 
-            // Valve 原始标识符
+            // Valve 原始标识符（值保持不变，marks 系统依赖）
             result.rarity_name = this.getRarityName(storageRow.rarity);
             result.quality_name = this.getQualityName(storageRow.quality);
             result.wear_category = storageRow.paint_wear !== undefined
                 ? this.getWearCategory(storageRow.paint_wear) : null;
+
+            // 标识符字段的本地化显示名（跟随 defaultLanguage）
+            if (result.rarity_name) {
+                result.rarity_name_local = this.getLocalizedDisplay('rarity_' + result.rarity_name, this.defaultTranslation);
+            }
+            if (result.quality_name) {
+                result.quality_name_local = this.getLocalizedDisplay(result.quality_name, this.defaultTranslation);
+            }
+            if (result.item_set) {
+                result.item_set_local = this.getLocalizedDisplay('csgo_' + result.item_set, this.defaultTranslation);
+            }
 
             // 刀具标记（★）
             if (storageRow.quality == 3) {
@@ -182,20 +191,26 @@ class ItemProcessor {
                 }
             }
 
-            // 多语言 name + 磨损名
+            // 多语言字段（name / market_name / 标识符显示名）
             for (const [lang, translations] of Object.entries(this.extraTranslations)) {
+                // name_{lang} + market_name_{lang}
                 const extraName = this.getItemName(storageRow, translations);
                 if (extraName) {
                     result['name_' + lang] = extraName;
-                    // 同语言的磨损名 + market_name
                     if (storageRow.paint_wear !== undefined) {
                         const exteriorNameLang = this.getWearNameLocalized(storageRow.paint_wear, translations);
                         if (exteriorNameLang) {
-                            result['exterior_name_' + lang] = exteriorNameLang;
                             result['market_name_' + lang] = extraName + ' (' + exteriorNameLang + ')';
                         }
                     }
                 }
+                // 标识符显示名_{lang}（独立于 name 查询）
+                const rarityLang = this.getLocalizedDisplay('rarity_' + result.rarity_name, translations);
+                if (rarityLang) result['rarity_name_' + lang] = rarityLang;
+                const qualityLang = this.getLocalizedDisplay(result.quality_name, translations);
+                if (qualityLang) result['quality_name_' + lang] = qualityLang;
+                const itemSetLang = this.getLocalizedDisplay('csgo_' + result.item_set, translations);
+                if (itemSetLang) result['item_set_' + lang] = itemSetLang;
             }
 
             // 自定义 mark（仅在 init 时传入了 marks 配置才输出）
@@ -494,6 +509,19 @@ class ItemProcessor {
         const idx = wearCategory.replace('wearcategory', '');
         const key = 'sfui_invtooltip_wear_amount_' + idx;
         const val = translationDict[key];
+        return val ? val.replaceAll('"', '') : null;
+    }
+
+    /**
+     * 通用本地化显示名查询
+     *
+     * 与 getDefaultTranslation 的区别：查不到时返回 null 而非 fallback 到原始 key。
+     * 供 rarity_name_local / quality_name_local / item_set_local 等可选字段使用，
+     * 翻译缺失时不生成对应字段，避免原始 key 污染输出。
+     */
+    getLocalizedDisplay(key, translationDict) {
+        if (!key || !translationDict) return null;
+        const val = translationDict[key.toLowerCase()];
         return val ? val.replaceAll('"', '') : null;
     }
 
