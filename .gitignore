@@ -1,6 +1,7 @@
 node_modules/*
 test/*
-
+**.txt
+.omo
 # Enricher data cache (auto-downloaded at runtime)
 cs2-inventory-schema/
 
