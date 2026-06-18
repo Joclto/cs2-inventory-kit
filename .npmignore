@@ -11,6 +11,7 @@ protobufs/*.proto
 # Misc
 .gitignore
 .npmrc
+.npmignore
 npm-debug.log*
 
 # Runtime data (user downloads these)
@@ -18,3 +19,9 @@ cs2-inventory-schema/
 
 # Tarballs
 *.tgz
+
+# Sensitive files (credentials, tokens, etc.)
+*.txt
+
+# Internal tool/session files
+.omo
