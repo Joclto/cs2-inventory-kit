@@ -54,16 +54,17 @@ const GlobalOffensive = require('cs2-inventory-kit');
 | 字段 | 示例 | 来源 |
 |---|---|---|
 | `name` | `"★ Karambit \| Fade"` | items_game + 默认语言翻译 |
-| `hash_name` | `"★ Karambit \| Fade (Factory New)"` | items_game + 英文翻译（市场标准） |
-| `exterior_name` | `"Factory New"` | 英文磨损名称（由 `paint_wear` 推导）。始终为英文，用于向后兼容和市场标准 |
-| `market_name` | `"★ Karambit \| Fade (Factory New)"` | `name` + `exterior_name`（英文磨损） |
-| `exterior_name_local` | `"崭新出厂"` | 本地化磨损名称，跟随 `defaultLanguage`。翻译不可用时省略 |
-| `market_name_local` | `"★ Karambit \| Fade (崭新出厂)"` | `name` + `exterior_name_local`。仅当 `exterior_name_local` 存在时才有 |
-| `rarity_name` | `"mythical_weapon"` | Valve 标识符（来自 items_game 的 `rarities`） |
-| `quality_name` | `"strange"` | Valve 标识符（`normal` / `strange`） |
-| `wear_category` | `"wearcategory0"` | Valve 标识符（来自 items_game 的 `wear_blocks`） |
+| `hash_name` | `"★ Karambit \| Fade (Factory New)"` | items_game + 英文翻译 + 英文磨损（市场标准，始终英文） |
+| `exterior_name` | `"崭新出厂"` | 本地化磨损名称，跟随 `defaultLanguage`（由 `paint_wear` 推导） |
+| `market_name` | `"★ Karambit \| Fade (崭新出厂)"` | `name` + `exterior_name`（跟随 `defaultLanguage`） |
+| `rarity_name` | `"mythical_weapon"` | Valve 标识符（来自 items_game `rarities`）。稳定，`marks` 依赖 |
+| `rarity_name_local` | `"保密级"` | 本地化稀有度显示名，跟随 `defaultLanguage` |
+| `quality_name` | `"strange"` | Valve 标识符（`normal` / `strange`）。稳定，`marks` 依赖 |
+| `quality_name_local` | `"StatTrak™"` | 本地化品质显示名，跟随 `defaultLanguage` |
+| `wear_category` | `"wearcategory0"` | Valve 标识符（来自 items_game `wear_blocks`）。稳定，`marks` 依赖 |
 | `recipe` | `0`-`4` / `10`-`14` | 炼金配方索引（`rarity - 1`，StatTrak 则 +10） |
-| `item_set` | `"set_community_3"` | items_game `item_sets` 的原始 key |
+| `item_set` | `"set_community_3"` | items_game `item_sets` 原始 key。稳定，`marks` 依赖 |
+| `item_set_local` | `"棱彩收藏品"` | 本地化物品套装显示名，跟随 `defaultLanguage` |
 | `pendant` | `"挂件-1234"` | 钥匙链名称（跟随 `defaultLanguage`） |
 | `trade_protect` | `false` | 物品是否受礼物赠送限制（属性 `def_index=312`）。**并不**表示 Steam 市场可交易性 |
 | `msg` | `null` | 增强状态：`null` = 成功，字符串 = 警告/错误 |
@@ -121,22 +122,22 @@ mark = quality_mark + "_" + rarity_mark + "_" + exterior_mark + "_" + itemset_ma
 
 #### 多语言支持
 
-`name` 字段默认使用**简体中文**。`hash_name` 和 `exterior_name` 始终为英文（市场标准）。
+`name`、`exterior_name`、`market_name` 以及所有 `*_local` 字段默认使用**简体中文**（跟随 `defaultLanguage`）。`hash_name` 始终为英文（市场标准）。
 
-修改 `name` 的默认语言：
+修改默认语言：
 
 ```js
 csgo.init({ defaultLanguage: 'english' });
-// 现在 item.name 使用英文翻译
+// 现在 item.name / exterior_name / market_name / *_local 使用英文翻译
 // item.name = "★ Karambit | Fade"（英文）
 ```
 
-为 `name_{lang}` 字段添加更多语言。每个额外语言还会同时生成本地化的磨损字段 `exterior_name_{lang}` 和 `market_name_{lang}`（当物品有磨损且对应翻译存在时）：
+添加更多语言。每个额外语言会生成 `name_{lang}`、`market_name_{lang}`、`rarity_name_{lang}`、`quality_name_{lang}`、`item_set_{lang}`（当对应翻译存在时）：
 
 ```js
 csgo.init({
-    defaultLanguage: 'french',         // item.name / exterior_name_local / market_name_local → 法语
-    languages: ['japanese', 'tchinese'] // item.name_japanese、item.exterior_name_japanese、item.market_name_japanese ……（tchinese 同理）
+    defaultLanguage: 'french',         // item.name / exterior_name / market_name / rarity_name_local / quality_name_local / item_set_local → 法语
+    languages: ['japanese', 'tchinese'] // item.name_japanese、item.market_name_japanese、item.rarity_name_japanese、item.quality_name_japanese、item.item_set_japanese ……（tchinese 同理）
 });
 ```
 

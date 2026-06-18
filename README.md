@@ -54,16 +54,17 @@ Item objects in `inventory`, `itemAcquired`, `itemChanged`, and `getCasketConten
 | Field | Example | Source |
 |---|---|---|
 | `name` | `"★ Karambit \| Fade"` | items_game + default language translation |
-| `hash_name` | `"★ Karambit \| Fade (Factory New)"` | items_game + english translation (market standard) |
-| `exterior_name` | `"Factory New"` | English wear name (derived from `paint_wear`). Always English for backward compat & market standard |
-| `market_name` | `"★ Karambit \| Fade (Factory New)"` | `name` + `exterior_name` (English wear) |
-| `exterior_name_local` | `"崭新出厂"` | Localized wear name following `defaultLanguage`. Omitted when translation unavailable |
-| `market_name_local` | `"★ Karambit \| Fade (崭新出厂)"` | `name` + `exterior_name_local`. Only present when `exterior_name_local` is |
-| `rarity_name` | `"mythical_weapon"` | Valve identifier (from items_game `rarities`) |
-| `quality_name` | `"strange"` | Valve identifier (`normal` / `strange`) |
-| `wear_category` | `"wearcategory0"` | Valve identifier (from items_game `wear_blocks`) |
+| `hash_name` | `"★ Karambit \| Fade (Factory New)"` | items_game + english translation + english wear (market standard, always English) |
+| `exterior_name` | `"崭新出厂"` | Localized wear name following `defaultLanguage` (derived from `paint_wear`) |
+| `market_name` | `"★ Karambit \| Fade (崭新出厂)"` | `name` + `exterior_name` (follows `defaultLanguage`) |
+| `rarity_name` | `"mythical_weapon"` | Valve identifier (from items_game `rarities`). Stable, used by `marks` |
+| `rarity_name_local` | `"保密级"` | Localized rarity display name following `defaultLanguage` |
+| `quality_name` | `"strange"` | Valve identifier (`normal` / `strange`). Stable, used by `marks` |
+| `quality_name_local` | `"StatTrak™"` | Localized quality display name following `defaultLanguage` |
+| `wear_category` | `"wearcategory0"` | Valve identifier (from items_game `wear_blocks`). Stable, used by `marks` |
 | `recipe` | `0`-`4` / `10`-`14` | Trade-up recipe index (`rarity - 1`, +10 if StatTrak) |
-| `item_set` | `"set_community_3"` | Original key from items_game `item_sets` |
+| `item_set` | `"set_community_3"` | Original key from items_game `item_sets`. Stable, used by `marks` |
+| `item_set_local` | `"棱彩收藏品"` | Localized item set display name following `defaultLanguage` |
 | `pendant` | `"挂件-1234"` | Keychain name (follows `defaultLanguage`) |
 | `trade_protect` | `false` | Whether item is gift-restricted (attribute `def_index=312`). Does NOT indicate Steam market tradability |
 | `msg` | `null` | Enrichment status: `null` = success, string = warning/error |
@@ -121,22 +122,22 @@ Example: `"ST_SX_ZX_PRIN"`. If any of the 4 marks is null, `mark` will be an emp
 
 #### Multi-Language Support
 
-The `name` field uses **Simplified Chinese** by default. `hash_name` and `exterior_name` are always English (market standard).
+The `name`, `exterior_name`, `market_name`, and all `*_local` fields use **Simplified Chinese** by default (following `defaultLanguage`). `hash_name` is always English (market standard).
 
-Change the default language for `name`:
+Change the default language:
 
 ```js
 csgo.init({ defaultLanguage: 'english' });
-// Now item.name uses English translations
+// Now item.name / exterior_name / market_name / *_local use English translations
 // item.name = "★ Karambit | Fade" (English)
 ```
 
-Add more languages for `name_{lang}` fields. Each extra language also produces localized wear fields `exterior_name_{lang}` and `market_name_{lang}` (when the item has wear and the translation exists):
+Add more languages. Each extra language produces `name_{lang}`, `market_name_{lang}`, `rarity_name_{lang}`, `quality_name_{lang}`, and `item_set_{lang}` (when translations exist):
 
 ```js
 csgo.init({
-    defaultLanguage: 'french',         // item.name / exterior_name_local / market_name_local → French
-    languages: ['japanese', 'tchinese'] // item.name_japanese, item.exterior_name_japanese, item.market_name_japanese, ... (same for tchinese)
+    defaultLanguage: 'french',         // item.name / exterior_name / market_name / rarity_name_local / quality_name_local / item_set_local → French
+    languages: ['japanese', 'tchinese'] // item.name_japanese, item.market_name_japanese, item.rarity_name_japanese, item.quality_name_japanese, item.item_set_japanese ... (same for tchinese)
 });
 ```
 
