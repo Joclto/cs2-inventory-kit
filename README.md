@@ -6,6 +6,8 @@
 
 **Inventory-focused CS2 Game Coordinator library with built-in item data enrichment.**
 
+[简体中文](./README.zh-CN.md) | English
+
 </div>
 
 ## Compatibility
