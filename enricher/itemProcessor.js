@@ -144,13 +144,21 @@ class ItemProcessor {
             result.item_set = this.getCaseName(storageRow);
             result.pendant = this.getPendant(storageRow);
 
-            // 磨损相关（exterior_name 固定英文标准名）
+            // 磨损相关
+            // - exterior_name / market_name / hash_name: 固定英文（向后兼容 + 市场规范）
+            // - exterior_name_local / market_name_local: 跟随 defaultLanguage
             if (storageRow.paint_wear !== undefined) {
                 result.exterior_name = this.getPaintWearNameEnglish(storageRow.paint_wear);
                 result.market_name = result.name + ' (' + result.exterior_name + ')';
                 // hash_name 也加英文磨损后缀
                 if (result.exterior_name) {
                     result.hash_name = result.hash_name + ' (' + result.exterior_name + ')';
+                }
+                // 本地化磨损名（跟随 defaultLanguage）
+                const exteriorNameLocal = this.getWearNameLocalized(storageRow.paint_wear, this.defaultTranslation);
+                if (exteriorNameLocal) {
+                    result.exterior_name_local = exteriorNameLocal;
+                    result.market_name_local = result.name + ' (' + exteriorNameLocal + ')';
                 }
             }
 
@@ -174,11 +182,19 @@ class ItemProcessor {
                 }
             }
 
-            // 多语言 name
+            // 多语言 name + 磨损名
             for (const [lang, translations] of Object.entries(this.extraTranslations)) {
                 const extraName = this.getItemName(storageRow, translations);
                 if (extraName) {
                     result['name_' + lang] = extraName;
+                    // 同语言的磨损名 + market_name
+                    if (storageRow.paint_wear !== undefined) {
+                        const exteriorNameLang = this.getWearNameLocalized(storageRow.paint_wear, translations);
+                        if (exteriorNameLang) {
+                            result['exterior_name_' + lang] = exteriorNameLang;
+                            result['market_name_' + lang] = extraName + ' (' + exteriorNameLang + ')';
+                        }
+                    }
                 }
             }
 
@@ -451,17 +467,6 @@ class ItemProcessor {
         return '';
     }
 
-    getPaintWearName(paintWear) {
-        const skinWearValues = [0.07, 0.15, 0.38, 0.45, 1];
-        const skinWearNames = ['崭新出厂', '略有磨损', '久经沙场', '战痕累累', '破损不堪'];
-        for (let i = 0; i < skinWearValues.length; i++) {
-            if (paintWear <= skinWearValues[i]) {
-                return skinWearNames[i];
-            }
-        }
-        return null;
-    }
-
     getPaintWearNameEnglish(paintWear) {
         const skinWearValues = [0.07, 0.15, 0.38, 0.45, 1];
         const skinWearNames = ['Factory New', 'Minimal Wear', 'Field-Tested', 'Well-Worn', 'Battle-Scarred'];
@@ -471,6 +476,25 @@ class ItemProcessor {
             }
         }
         return null;
+    }
+
+    /**
+     * 本地化磨损名（跟随传入翻译字典对应语言）
+     *
+     * 通过 getWearCategory 得到 wearcategory{N}，再查翻译表里的
+     * SFUI_InvTooltip_Wear_Amount_{N} 键（parseTranslationJson 已小写化）。
+     * 查不到返回 null（调用方决定是否生成对应字段）。
+     */
+    getWearNameLocalized(paintWear, translationDict) {
+        if (paintWear === undefined || paintWear === null || !translationDict) {
+            return null;
+        }
+        const wearCategory = this.getWearCategory(paintWear);
+        if (!wearCategory) return null;
+        const idx = wearCategory.replace('wearcategory', '');
+        const key = 'sfui_invtooltip_wear_amount_' + idx;
+        const val = translationDict[key];
+        return val ? val.replaceAll('"', '') : null;
     }
 
     isStatTrak(storageRow) {
