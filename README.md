@@ -10,11 +10,11 @@
 
 </div>
 
-## Compatibility
+## Relationship to node-globaloffensive
 
-This library is a **drop-in replacement** for [node-globaloffensive](https://github.com/DoctorMcKay/node-globaloffensive). All existing methods, events, and properties are fully supported with zero code changes.
+This library **extends and improves** [node-globaloffensive](https://github.com/DoctorMcKay/node-globaloffensive) — it is 100% backward compatible, so all existing methods, events, and properties continue to work with zero code changes, while adding built-in item data enrichment, keychain support, multi-language names, and more.
 
-**Complete API reference**: [node-globaloffensive README](https://github.com/DoctorMcKay/node-globaloffensive#readme)
+**Complete API reference for the inherited API**: [node-globaloffensive README](https://github.com/DoctorMcKay/node-globaloffensive#readme)
 
 To migrate, simply change your `require` statement:
 

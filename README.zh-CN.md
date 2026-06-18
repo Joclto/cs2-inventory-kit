@@ -10,11 +10,11 @@ English | [简体中文](./README.md)
 
 </div>
 
-## 兼容性
+## 与 node-globaloffensive 的关系
 
-本库是 [node-globaloffensive](https://github.com/DoctorMcKay/node-globaloffensive) 的**直接替代品（drop-in replacement）**。所有现有的方法、事件和属性均已完整支持，无需改动任何代码。
+本库在 [node-globaloffensive](https://github.com/DoctorMcKay/node-globaloffensive) 的基础上**延伸与改进** —— 100% 向后兼容，所有现有的方法、事件和属性无需任何代码改动即可照常使用，同时新增了内置物品数据增强、钥匙链支持、多语言名称等功能。
 
-**完整的 API 参考**：[node-globaloffensive README](https://github.com/DoctorMcKay/node-globaloffensive#readme)
+**继承 API 的完整参考**：[node-globaloffensive README](https://github.com/DoctorMcKay/node-globaloffensive#readme)
 
 迁移时只需修改 `require` 语句：
 
