@@ -12,7 +12,7 @@ English | [简体中文](./README.md)
 
 ## 与 node-globaloffensive 的关系
 
-本库在 [node-globaloffensive](https://github.com/DoctorMcKay/node-globaloffensive) 的基础上**延伸与改进** —— 100% 向后兼容，所有现有的方法、事件和属性无需任何代码改动即可照常使用，同时新增了内置物品数据增强、钥匙链支持、多语言名称等功能。
+本库在 [node-globaloffensive](https://github.com/DoctorMcKay/node-globaloffensive) 的基础上**延伸与改进** —— 100% 向后兼容，所有现有的方法、事件和属性无需任何代码改动即可照常使用，同时新增了内置物品数据增强、挂件支持、多语言名称等功能。
 
 **继承 API 的完整参考**：[node-globaloffensive README](https://github.com/DoctorMcKay/node-globaloffensive#readme)
 
@@ -34,15 +34,15 @@ const GlobalOffensive = require('cs2-inventory-kit');
 
 ## 新特性
 
-### 钥匙链（Keychain）支持
+### 挂件（Keychain）支持
 
-用于 CS2 钥匙链（武器挂件）操作的方法与事件：
+用于 CS2 挂件操作的方法与事件：
 
 | API | 类型 | 说明 |
 |---|---|---|
-| `csgo.applyKeychain(itemId, keychainId[, keychainSlot])` | 方法 | 给武器应用一个钥匙链（消耗该钥匙链物品） |
-| `csgo.removeKeychain(itemId)` | 方法 | 从武器移除钥匙链（消耗一次移除工具次数） |
-| `csgo.keychainCharges` | 属性（只读） | 剩余的钥匙链移除工具次数。在 GC 推送数据之前为 `undefined` |
+| `csgo.applyKeychain(itemId, keychainId[, keychainSlot])` | 方法 | 给武器应用一个挂件（消耗该挂件物品） |
+| `csgo.removeKeychain(itemId)` | 方法 | 从武器移除挂件（消耗一次移除工具次数） |
+| `csgo.keychainCharges` | 属性（只读） | 剩余的挂件移除工具次数。在 GC 推送数据之前为 `undefined` |
 | `csgo.on('keychainCharges', fn)` | 事件 | 在次数变化时触发（GC 连接、移除操作后等） |
 
 ### 物品数据增强（自动）
@@ -65,7 +65,7 @@ const GlobalOffensive = require('cs2-inventory-kit');
 | `recipe` | `0`-`4` / `10`-`14` | 炼金配方索引（`rarity - 1`，StatTrak 则 +10） |
 | `item_set` | `"set_community_3"` | items_game `item_sets` 原始 key。稳定，`marks` 依赖 |
 | `item_set_local` | `"棱彩收藏品"` | 本地化物品套装显示名，跟随 `defaultLanguage` |
-| `pendant` | `"挂件-1234"` | 钥匙链名称（跟随 `defaultLanguage`） |
+| `pendant` | `"挂件-1234"` | 挂件名称（跟随 `defaultLanguage`） |
 | `trade_protect` | `false` | 物品是否受礼物赠送限制（属性 `def_index=312`）。**并不**表示 Steam 市场可交易性 |
 | `msg` | `null` | 增强状态：`null` = 成功，字符串 = 警告/错误 |
 
@@ -201,9 +201,9 @@ csgo.on('connectedToGC', async () => {
     });
 });
 
-// 钥匙链移除次数
+// 挂件移除次数
 csgo.on('keychainCharges', (charges) => {
-    console.log(`钥匙链移除工具剩余次数：${charges}`);
+    console.log(`挂件移除工具剩余次数：${charges}`);
 });
 
 user.logOn({ refreshToken: 'your-refresh-token' });
