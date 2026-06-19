@@ -212,6 +212,16 @@ user.on('loggedOn', () => {
 });
 ```
 
+## Contributing
+
+Found a bug or have a feature idea? [Open an issue](https://github.com/Joclto/cs2-inventory-kit/issues).
+
+Want to ask a question or start an open-ended discussion? Use [GitHub Discussions](https://github.com/Joclto/cs2-inventory-kit/discussions).
+
+Pull requests are welcome. For non-trivial changes, please open an issue first to discuss what you'd like to change.
+
+---
+
 ## License
 
 MIT. See [LICENSE](./LICENSE).

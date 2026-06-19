@@ -212,6 +212,16 @@ user.on('loggedOn', () => {
 });
 ```
 
+## 参与贡献
+
+发现 Bug 或有功能建议？欢迎[提交 Issue](https://github.com/Joclto/cs2-inventory-kit/issues)。
+
+想提问或发起开放式讨论？欢迎到 [GitHub Discussions](https://github.com/Joclto/cs2-inventory-kit/discussions)。
+
+欢迎提交 Pull Request。较大改动建议先开 Issue 讨论一下方向。
+
+---
+
 ## 许可证
 
 MIT。详见 [LICENSE](./LICENSE)。
