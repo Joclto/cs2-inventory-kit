@@ -19,10 +19,9 @@ jobs:
         with:
           node-version: 'lts/*'
           registry-url: 'https://registry.npmjs.org'
-          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install  # 如果没 package-lock.json 就改成 npm install
+        run: npm install
 
       - name: Verify package contents (防止敏感文件泄露)
         run: npm pack --dry-run
