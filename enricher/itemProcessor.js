@@ -148,13 +148,14 @@ class ItemProcessor {
             // - exterior_name / market_name: 跟随 defaultLanguage
             // - hash_name: 始终英文（市场标准，独立查英文磨损）
             if (storageRow.paint_wear !== undefined) {
-                const exteriorName = this.getWearNameLocalized(storageRow.paint_wear, this.defaultTranslation);
+                const englishWear = this.getPaintWearNameEnglish(storageRow.paint_wear);
+                // 本地化磨损名，翻译缺失时 fallback 到英文，保证 exterior_name 始终存在
+                const exteriorName = this.getWearNameLocalized(storageRow.paint_wear, this.defaultTranslation) || englishWear;
                 if (exteriorName) {
                     result.exterior_name = exteriorName;
                     result.market_name = result.name + ' (' + exteriorName + ')';
                 }
                 // hash_name 始终用英文磨损（市场规范）
-                const englishWear = this.getPaintWearNameEnglish(storageRow.paint_wear);
                 if (englishWear) {
                     result.hash_name = result.hash_name + ' (' + englishWear + ')';
                 }
@@ -204,13 +205,19 @@ class ItemProcessor {
                         }
                     }
                 }
-                // 标识符显示名_{lang}（独立于 name 查询）
-                const rarityLang = this.getLocalizedDisplay('rarity_' + result.rarity_name, translations);
-                if (rarityLang) result['rarity_name_' + lang] = rarityLang;
-                const qualityLang = this.getLocalizedDisplay(result.quality_name, translations);
-                if (qualityLang) result['quality_name_' + lang] = qualityLang;
-                const itemSetLang = this.getLocalizedDisplay('csgo_' + result.item_set, translations);
-                if (itemSetLang) result['item_set_' + lang] = itemSetLang;
+                // 标识符显示名_{lang}（独立于 name 查询，需对应标识符存在）
+                if (result.rarity_name) {
+                    const rarityLang = this.getLocalizedDisplay('rarity_' + result.rarity_name, translations);
+                    if (rarityLang) result['rarity_name_' + lang] = rarityLang;
+                }
+                if (result.quality_name) {
+                    const qualityLang = this.getLocalizedDisplay(result.quality_name, translations);
+                    if (qualityLang) result['quality_name_' + lang] = qualityLang;
+                }
+                if (result.item_set) {
+                    const itemSetLang = this.getLocalizedDisplay('csgo_' + result.item_set, translations);
+                    if (itemSetLang) result['item_set_' + lang] = itemSetLang;
+                }
             }
 
             // 自定义 mark（仅在 init 时传入了 marks 配置才输出）
