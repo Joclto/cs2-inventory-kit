@@ -53,19 +53,19 @@ Item objects in `inventory`, `itemAcquired`, `itemChanged`, and `getCasketConten
 
 | Field | Example | Source |
 |---|---|---|
-| `name` | `"★ Karambit \| Fade"` | items_game + default language translation |
-| `hash_name` | `"★ Karambit \| Fade (Factory New)"` | items_game + english translation + english wear (market standard, always English) |
-| `exterior_name` | `"崭新出厂"` | Localized wear name following `defaultLanguage` (derived from `paint_wear`) |
-| `market_name` | `"★ Karambit \| Fade (崭新出厂)"` | `name` + `exterior_name` (follows `defaultLanguage`) |
-| `rarity_name` | `"mythical_weapon"` | Valve identifier (from items_game `rarities`). Stable, used by `marks` |
+| `name` | `"R8左轮手枪 \| 头骨粉碎者"` | items_game + default language translation |
+| `hash_name` | `"R8 Revolver \| Skull Crusher (Field-Tested)"` | items_game + english translation + english wear (market standard, always English) |
+| `exterior_name` | `"久经沙场"` | Localized wear name following `defaultLanguage` (derived from `paint_wear`) |
+| `market_name` | `"R8左轮手枪 \| 头骨粉碎者 (久经沙场)"` | `name` + `exterior_name` (follows `defaultLanguage`) |
+| `rarity_name` | `"legendary_weapon"` | Valve identifier (from items_game `rarities`). Stable, used by `marks` |
 | `rarity_name_local` | `"保密级"` | Localized rarity display name following `defaultLanguage` |
-| `quality_name` | `"strange"` | Valve identifier (`normal` / `strange`). Stable, used by `marks` |
-| `quality_name_local` | `"StatTrak™"` | Localized quality display name following `defaultLanguage` |
-| `wear_category` | `"wearcategory0"` | Valve identifier (from items_game `wear_blocks`). Stable, used by `marks` |
-| `recipe` | `0`-`4` / `10`-`14` | Trade-up recipe index (`rarity - 1`, +10 if StatTrak) |
-| `item_set` | `"set_community_3"` | Original key from items_game `item_sets`. Stable, used by `marks` |
+| `quality_name` | `"normal"` | Valve identifier (`normal` / `strange`). Stable, used by `marks` |
+| `quality_name_local` | `"普通"` | Localized quality display name following `defaultLanguage` |
+| `wear_category` | `"wearcategory2"` | Valve identifier (from items_game `wear_blocks`). Stable, used by `marks` |
+| `recipe` | `4` | Trade-up recipe index (`rarity - 1`, +10 if StatTrak) |
+| `item_set` | `"set_community_22"` | Original key from items_game `item_sets`. Stable, used by `marks` |
 | `item_set_local` | `"棱彩收藏品"` | Localized item set display name following `defaultLanguage` |
-| `pendant` | `"挂件-1234"` | Keychain name (follows `defaultLanguage`) |
+| `pendant` | `null` | Keychain name following `defaultLanguage` (e.g. `"挂件-1234"`). `null` if none |
 | `trade_protect` | `false` | Whether item is gift-restricted (attribute `def_index=312`). Does NOT indicate Steam market tradability |
 | `msg` | `null` | Enrichment status: `null` = success, string = warning/error |
 

@@ -53,19 +53,19 @@ const GlobalOffensive = require('cs2-inventory-kit');
 
 | 字段 | 示例 | 来源 |
 |---|---|---|
-| `name` | `"★ Karambit \| Fade"` | items_game + 默认语言翻译 |
-| `hash_name` | `"★ Karambit \| Fade (Factory New)"` | items_game + 英文翻译 + 英文磨损（市场标准，始终英文） |
-| `exterior_name` | `"崭新出厂"` | 本地化磨损名称，跟随 `defaultLanguage`（由 `paint_wear` 推导） |
-| `market_name` | `"★ Karambit \| Fade (崭新出厂)"` | `name` + `exterior_name`（跟随 `defaultLanguage`） |
-| `rarity_name` | `"mythical_weapon"` | Valve 标识符（来自 items_game `rarities`）。稳定，`marks` 依赖 |
+| `name` | `"R8左轮手枪 \| 头骨粉碎者"` | items_game + 默认语言翻译 |
+| `hash_name` | `"R8 Revolver \| Skull Crusher (Field-Tested)"` | items_game + 英文翻译 + 英文磨损（市场标准，始终英文） |
+| `exterior_name` | `"久经沙场"` | 本地化磨损名称，跟随 `defaultLanguage`（由 `paint_wear` 推导） |
+| `market_name` | `"R8左轮手枪 \| 头骨粉碎者 (久经沙场)"` | `name` + `exterior_name`（跟随 `defaultLanguage`） |
+| `rarity_name` | `"legendary_weapon"` | Valve 标识符（来自 items_game `rarities`）。稳定，`marks` 依赖 |
 | `rarity_name_local` | `"保密级"` | 本地化稀有度显示名，跟随 `defaultLanguage` |
-| `quality_name` | `"strange"` | Valve 标识符（`normal` / `strange`）。稳定，`marks` 依赖 |
-| `quality_name_local` | `"StatTrak™"` | 本地化品质显示名，跟随 `defaultLanguage` |
-| `wear_category` | `"wearcategory0"` | Valve 标识符（来自 items_game `wear_blocks`）。稳定，`marks` 依赖 |
-| `recipe` | `0`-`4` / `10`-`14` | 炼金配方索引（`rarity - 1`，StatTrak 则 +10） |
-| `item_set` | `"set_community_3"` | items_game `item_sets` 原始 key。稳定，`marks` 依赖 |
+| `quality_name` | `"normal"` | Valve 标识符（`normal` / `strange`）。稳定，`marks` 依赖 |
+| `quality_name_local` | `"普通"` | 本地化品质显示名，跟随 `defaultLanguage` |
+| `wear_category` | `"wearcategory2"` | Valve 标识符（来自 items_game `wear_blocks`）。稳定，`marks` 依赖 |
+| `recipe` | `4` | 炼金配方索引（`rarity - 1`，StatTrak 则 +10） |
+| `item_set` | `"set_community_22"` | items_game `item_sets` 原始 key。稳定，`marks` 依赖 |
 | `item_set_local` | `"棱彩收藏品"` | 本地化物品套装显示名，跟随 `defaultLanguage` |
-| `pendant` | `"挂件-1234"` | 挂件名称（跟随 `defaultLanguage`） |
+| `pendant` | `null` | 挂件名称，跟随 `defaultLanguage`（如 `"挂件-1234"`）。无挂件时为 `null` |
 | `trade_protect` | `false` | 物品是否受礼物赠送限制（属性 `def_index=312`）。**并不**表示 Steam 市场可交易性 |
 | `msg` | `null` | 增强状态：`null` = 成功，字符串 = 警告/错误 |
 
