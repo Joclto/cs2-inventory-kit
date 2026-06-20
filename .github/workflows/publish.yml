@@ -1,16 +1,16 @@
 name: Publish to npm
 
+# 触发条件：release-please 在 Release PR 合并时创建并发布 GitHub Release
 on:
-  push:
-    tags:
-      - 'v*'  # 只在推送 v 开头的 tag 时触发（npm version 生成的就是这种）
+  release:
+    types: [published]
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # 创建 GitHub Release 需要
-      id-token: write  # npm provenance 需要
+      contents: read      # 只读 —— GitHub Release 已由 release-please 创建
+      id-token: write     # npm provenance 需要
     steps:
       - uses: actions/checkout@v4
 
@@ -30,10 +30,3 @@ jobs:
         run: npm publish --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          generate_release_notes: true  # 自动根据 commits 生成 release notes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

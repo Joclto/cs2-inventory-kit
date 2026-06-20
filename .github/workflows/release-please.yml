@@ -1,0 +1,22 @@
+name: release-please
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          release-type: node
+          # 必须用 PAT：默认 GITHUB_TOKEN 创建的 release 事件不会触发下游 publish workflow
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
