@@ -66,7 +66,7 @@ const GlobalOffensive = require('cs2-inventory-kit');
 | `item_set` | `"set_community_22"` | items_game `item_sets` 原始 key。稳定，`marks` 依赖 |
 | `item_set_local` | `"棱彩收藏品"` | 本地化物品套装显示名，跟随 `defaultLanguage` |
 | `pendant` | `null` | 挂件名称，跟随 `defaultLanguage`（如 `"挂件-1234"`）。无挂件时为 `null` |
-| `trade_protect` | `false` | 物品是否受礼物赠送限制（属性 `def_index=312`）。**并不**表示 Steam 市场可交易性 |
+| `trade_protect` | `false` | 物品是否处于交易保护状态（属性 `def_index=312`）。受交易保护的物品不能被消耗、改造或转让 |
 | `msg` | `null` | 增强状态：`null` = 成功，字符串 = 警告/错误 |
 
 #### 自定义标记（可选）

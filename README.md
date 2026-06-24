@@ -66,7 +66,7 @@ Item objects in `inventory`, `itemAcquired`, `itemChanged`, and `getCasketConten
 | `item_set` | `"set_community_22"` | Original key from items_game `item_sets`. Stable, used by `marks` |
 | `item_set_local` | `"棱彩收藏品"` | Localized item set display name following `defaultLanguage` |
 | `pendant` | `null` | Keychain name following `defaultLanguage` (e.g. `"挂件-1234"`). `null` if none |
-| `trade_protect` | `false` | Whether item is gift-restricted (attribute `def_index=312`). Does NOT indicate Steam market tradability |
+| `trade_protect` | `false` | Whether the item is trade-protected (attribute `def_index=312`). Trade-protected items cannot be consumed, modified, or transferred |
 | `msg` | `null` | Enrichment status: `null` = success, string = warning/error |
 
 #### Custom Marks (Optional)
