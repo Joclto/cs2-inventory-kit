@@ -12,7 +12,7 @@ English | [简体中文](./README.md)
 
 ## 与 node-globaloffensive 的关系
 
-本库在 [node-globaloffensive](https://github.com/DoctorMcKay/node-globaloffensive) 的基础上**延伸与改进** —— 100% 向后兼容，所有现有的方法、事件和属性无需任何代码改动即可照常使用，同时新增了内置物品数据增强、挂件支持、多语言名称等功能。
+本库在 [node-globaloffensive](https://github.com/DoctorMcKay/node-globaloffensive) 的基础上**延伸与改进** —— 100% 向后兼容，所有现有的方法、事件和属性无需任何代码改动即可照常使用，同时新增了内置物品数据增强、挂件支持、基于 CSGO-API 的物品增强等功能。
 
 **继承 API 的完整参考**：[node-globaloffensive README](https://github.com/DoctorMcKay/node-globaloffensive#readme)
 
@@ -53,20 +53,25 @@ const GlobalOffensive = require('cs2-inventory-kit');
 
 | 字段 | 示例 | 来源 |
 |---|---|---|
-| `name` | `"R8左轮手枪 \| 头骨粉碎者"` | items_game + 默认语言翻译 |
-| `hash_name` | `"R8 Revolver \| Skull Crusher (Field-Tested)"` | items_game + 英文翻译 + 英文磨损（市场标准，始终英文） |
-| `exterior_name` | `"久经沙场"` | 本地化磨损名称，跟随 `defaultLanguage`（由 `paint_wear` 推导） |
-| `market_name` | `"R8左轮手枪 \| 头骨粉碎者 (久经沙场)"` | `name` + `exterior_name`（跟随 `defaultLanguage`） |
-| `rarity_name` | `"legendary_weapon"` | Valve 标识符（来自 items_game `rarities`）。稳定，`marks` 依赖 |
-| `rarity_name_local` | `"保密级"` | 本地化稀有度显示名，跟随 `defaultLanguage` |
-| `quality_name` | `"normal"` | Valve 标识符（`normal` / `strange`）。稳定，`marks` 依赖 |
-| `quality_name_local` | `"普通"` | 本地化品质显示名，跟随 `defaultLanguage` |
-| `wear_category` | `"wearcategory2"` | Valve 标识符（来自 items_game `wear_blocks`）。稳定，`marks` 依赖 |
-| `recipe` | `4` | 炼金配方索引（`rarity - 1`，StatTrak 则 +10） |
-| `item_set` | `"set_community_22"` | items_game `item_sets` 原始 key。稳定，`marks` 依赖 |
-| `item_set_local` | `"棱彩收藏品"` | 本地化物品套装显示名，跟随 `defaultLanguage` |
-| `pendant` | `null` | 挂件名称，跟随 `defaultLanguage`（如 `"挂件-1234"`）。无挂件时为 `null` |
-| `trade_protect` | `false` | 物品是否处于交易保护状态（属性 `def_index=312`）。受交易保护的物品不能被消耗、改造或转让 |
+| `name` | `"R8左轮手枪 \| 头骨粉碎者"` | CSGO-API 中文数据（中文显示名） |
+| `hash_name` | `"R8 Revolver \| Skull Crusher (Field-Tested)"` | CSGO-API 英文数据 + 英文磨损后缀（市场标准） |
+| `market_name` | `"R8左轮手枪 \| 头骨粉碎者 (久经沙场)"` | `name` + 中文磨损名 |
+| `exterior_name` | `"久经沙场"` | 中文磨损名（由 paint_wear 阈值映射） |
+| `exterior_key` | `"wearcategory2"` | Valve 磨损标识符。marks 依赖 |
+| `rarity_name` | `"保密级"` | 中文稀有度名（来自 CSGO-API） |
+| `rarity_key` | `"legendary_weapon"` | Valve 稀有度标识符（CSGO-API rarity.id 去前缀）。marks 依赖 |
+| `quality_name` | `"普通"` | 推断的品质显示名（普通 / ★ / StatTrak™ / ★ StatTrak™ / 纪念品） |
+| `quality_key` | `"normal"` | Valve 品质标识符（normal / strange / unusual / unusual_strange / tournament）。marks 依赖 |
+| `itemset_name` | `"棱彩武器箱"` | 中文武器箱/收藏品名（优先武器箱，回退收藏品） |
+| `itemset_key` | `"set_community_22"` | Valve 物品集标识符（从 collection-set-xxx 转换）。marks 依赖。仅有武器箱的物品可能为 null |
+| `recipe` | `4` | 炼金配方索引（`rarity - 1`，StatTrak 再 +10） |
+| `pendant` | `null` | 挂件名称（如 `"挂件-1234"`）。无挂件时为 `null` |
+| `stickers` | `[]` | 结构化印花数组（仅武器皮肤）：`[{slot, sticker_id, name, hash_name, wear}]` |
+| `wear_min` | `0.06` | 皮肤最低磨损（CSGO-API min_float）。非皮肤物品为 `null` |
+| `wear_max` | `0.8` | 皮肤最高磨损（CSGO-API max_float）。非皮肤物品为 `null` |
+| `paint_wear_norm` | `0.35` | 归一化磨损：`(paint_wear - wear_min) / (wear_max - wear_min)`。wear_min 等于 wear_max 时为 `null` |
+| `trade_protect` | `false` | 是否处于交易保护状态（属性 def_index=312） |
+| `item_storage_total` | `null` | casket_contained_item_count 的别名 |
 | `msg` | `null` | 增强状态：`null` = 成功，字符串 = 警告/错误 |
 
 #### 自定义标记（可选）
@@ -86,7 +91,10 @@ csgo.init({
         },
         quality: {
             'normal': 'PT',
-            'strange': 'ST'
+            'strange': 'ST',
+            'unusual': 'ST',
+            'unusual_strange': 'ST',
+            'tournament': 'ZN'
         },
         exterior: {
             'wearcategory0': 'ZX',
@@ -104,73 +112,61 @@ csgo.init({
 
 | 字段 | 取值依据 | 示例 |
 |---|---|---|
-| `rarity_mark` | `rarity_name` 的值 | `"SX"` |
-| `quality_mark` | `quality_name` 的值 | `"ST"` |
-| `exterior_mark` | `wear_category` 的值 | `"JJ"` |
-| `itemset_mark` | `item_set` 的值 | `"PRIN"` |
-| `mark` | 组合（需 4 项齐全） | `"ST_SX_JJ_PRIN"` |
+| `rarity_mark` | `rarity_key` 的值 | `"BM"` |
+| `quality_mark` | `quality_key` 的值 | `"ST"` |
+| `exterior_mark` | `exterior_key` 的值 | `"JJ"` |
+| `itemset_mark` | `itemset_key` 的值 | `"PRIN"` |
+| `mark` | 组合（需 4 项齐全） | `"ST_BM_JJ_PRIN"` |
 
 如果未传入 `marks`，这些字段将不会出现在物品对象上。
 
-当传入 `marks` 时，会**自动生成**组合字段 `mark` —— 它将上述 4 个标记用 `_` 连接（仅当 4 个都不为 null 时）：
+当传入 `marks` 时，会**自动生成**组合字段 `mark`，它将上述 4 个标记用 `_` 连接（仅当 4 个都不为 null 时）：
 
 ```
 mark = quality_mark + "_" + rarity_mark + "_" + exterior_mark + "_" + itemset_mark
 ```
 
-示例：`"ST_SX_ZX_PRIN"`。如果 4 个标记中任一为 null，则 `mark` 为空字符串 `""`。
+示例：`"ST_BM_JJ_PRIN"`。如果 4 个标记中任一为 null，则 `mark` 为空字符串 `""`。
 
-#### 多语言支持
+#### 双语支持
 
-`name`、`exterior_name`、`market_name` 以及所有 `*_local` 字段默认使用**简体中文**（跟随 `defaultLanguage`）。`hash_name` 始终为英文（市场标准）。
-
-修改默认语言：
-
-```js
-csgo.init({ defaultLanguage: 'english' });
-// 现在 item.name / exterior_name / market_name / *_local 使用英文翻译
-// item.name = "★ Karambit | Fade"（英文）
-```
-
-添加更多语言。每个额外语言会生成 `name_{lang}`、`market_name_{lang}`、`rarity_name_{lang}`、`quality_name_{lang}`、`item_set_{lang}`（当对应翻译存在时）：
-
-```js
-csgo.init({
-    defaultLanguage: 'french',         // item.name / exterior_name / market_name / rarity_name_local / quality_name_local / item_set_local → 法语
-    languages: ['japanese', 'tchinese'] // item.name_japanese、item.market_name_japanese、item.rarity_name_japanese、item.quality_name_japanese、item.item_set_japanese ……（tchinese 同理）
-});
-```
-
-支持的关键字（29 种语言）：`brazilian`、`bulgarian`、`czech`、`danish`、`dutch`、`english`、`finnish`、`french`、`german`、`greek`、`hungarian`、`italian`、`japanese`、`koreana`、`latam`、`norwegian`、`polish`、`portuguese`、`romanian`、`russian`、`schinese`、`schinese_pw`、`spanish`、`swedish`、`tchinese`、`thai`、`turkish`、`ukrainian`、`vietnamese`。
+物品名称使用**中文**（`name`、`market_name`、`exterior_name`、`rarity_name` 等），来自 CSGO-API 中文数据。`hash_name` 始终为英文（市场标准），来自 CSGO-API 英文数据。Valve 标识符（`*_key` 字段）与语言无关。
 
 ### 工具 API
 
 | API | 说明 |
 |---|---|
 | `await csgo.ready()` | 等待增强器数据加载完成。返回一个 Promise。 |
-| `csgo.init(opts)` | 配置增强器选项（语言、标记、dataDir 等）。构造时会自动以默认值调用一次；如需自定义请再调用。**每次调用会替换之前所有选项**（不会合并）。 |
+| `csgo.init(opts)` | 配置增强器选项（标记、dataDir 等）。构造时会自动以默认值调用一次；如需自定义请再调用。**每次调用会替换之前所有选项**（不会合并）。 |
 | `csgo.manifestId` | 当前已加载 schema 数据对应的 CS2 manifest ID（只读） |
 | `csgo.on('enricherReady', fn)` | 增强器数据加载完成时触发。如果此时库存已经存在，会一次性批量增强；否则会在 GC 连接后自动增强。 |
 | `csgo.on('enricherError', fn)` | 增强器数据加载失败时触发 |
+| `csgo.on('downloadStart', fn)` | CSGO-API 数据下载开始时触发。参数：`{files, total}` |
+| `csgo.on('fileProgress', fn)` | 单个文件下载进度。参数：`{key, label, phase, bytesDownloaded?, bytesTotal?, percent?}` |
+| `csgo.on('downloadProgress', fn)` | 整体下载进度。参数：`{completed, total, overallPercent}` |
+| `csgo.on('fileError', fn)` | 单个文件下载失败（可重试）。参数：`{key, label, error, attempt}` |
+| `csgo.on('downloadDone', fn)` | 全部下载完成。参数：`{results, succeeded, failed}` |
 
 #### `init(opts)` 选项
 
 | 选项 | 类型 | 默认值 | 说明 |
 |---|---|---|---|
 | `dataDir` | string | `./cs2-inventory-schema` | 自定义数据目录 |
-| `defaultLanguage` | string | `schinese` | `name` 字段使用的语言。若非 schinese/english 则会自动下载 |
-| `languages` | string[] | `[]` | 额外语言，用于生成 `name_{lang}` 字段 |
 | `marks` | object | `null` | 自定义标记映射（见 [自定义标记](#自定义标记可选)） |
 | `checkIntervalHours` | number | `24` | 更新检查间隔 |
 | `forceUpdate` | boolean | `false` | 强制重新下载所有文件 |
+| `onDownloadProgress` | function | `null` | 整体下载进度回调：`(info) => {}`，info 为 `{completed, total, overallPercent}` |
 
 ### 数据来源与自动更新
 
-物品 schema 数据会自动从 [ByMykel/counter-strike-file-tracker](https://github.com/ByMykel/counter-strike-file-tracker) 下载：
+物品数据自动从 [ByMykel/CSGO-API](https://github.com/ByMykel/CSGO-API) 下载（社区维护的结构化 JSON API）：
 
-- **首次使用**：下载约 20MB（items_game + schinese + english 的 JSON）
-- **每次启动**：通过 GitHub API 检查 SHA 是否变化（约 3KB）。仅在已更新或距上次下载超过 24 小时时才下载。
+- **16 个文件**（8 种物品类型 x 中文 + 英文）：skins、music_kits、graffiti、keychains、sticker_slabs、highlights、stickers、collectibles
+- **并行下载**，并发上限 8，每个文件 3 次重试
+- **首次使用**：下载约 5MB
+- **每次启动**：通过 GitHub API 检查哨兵文件 SHA。仅在数据更新或距上次下载超过 24 小时时才重新下载。
 - **缓存位置**：`./cs2-inventory-schema/`（请加入 `.gitignore`）
+- **进度事件**：`csgo.on('downloadProgress', fn)` 或 `init({ onDownloadProgress: fn })`
 - **强制更新**：`csgo.init({ forceUpdate: true })`
 
 ---
@@ -191,13 +187,13 @@ let user = new SteamUser();
 let csgo = new GlobalOffensive(user);
 
 csgo.on('connectedToGC', async () => {
-    // 等待增强器下载物品数据完成（首次约 20MB）
+    // 等待增强器下载物品数据完成（首次约 5MB）
     await csgo.ready();
 
     // 现在所有物品都已增强：name、hash_name、rarity_name 等
     console.log(`库存：${csgo.inventory.length} 件物品`);
     csgo.inventory.forEach(item => {
-        console.log(`${item.name} (${item.exterior_name}) [${item.rarity_name}]`);
+        console.log(`${item.name} (${item.exterior_name}) [${item.rarity_key}]`);
     });
 });
 

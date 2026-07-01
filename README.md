@@ -12,7 +12,7 @@
 
 ## Relationship to node-globaloffensive
 
-This library **extends and improves** [node-globaloffensive](https://github.com/DoctorMcKay/node-globaloffensive) — it is 100% backward compatible, so all existing methods, events, and properties continue to work with zero code changes, while adding built-in item data enrichment, keychain support, multi-language names, and more.
+This library **extends and improves** [node-globaloffensive](https://github.com/DoctorMcKay/node-globaloffensive) — it is 100% backward compatible, so all existing methods, events, and properties continue to work with zero code changes, while adding built-in item data enrichment, keychain support, item enrichment via CSGO-API, and more.
 
 **Complete API reference for the inherited API**: [node-globaloffensive README](https://github.com/DoctorMcKay/node-globaloffensive#readme)
 
@@ -53,20 +53,25 @@ Item objects in `inventory`, `itemAcquired`, `itemChanged`, and `getCasketConten
 
 | Field | Example | Source |
 |---|---|---|
-| `name` | `"R8左轮手枪 \| 头骨粉碎者"` | items_game + default language translation |
-| `hash_name` | `"R8 Revolver \| Skull Crusher (Field-Tested)"` | items_game + english translation + english wear (market standard, always English) |
-| `exterior_name` | `"久经沙场"` | Localized wear name following `defaultLanguage` (derived from `paint_wear`) |
-| `market_name` | `"R8左轮手枪 \| 头骨粉碎者 (久经沙场)"` | `name` + `exterior_name` (follows `defaultLanguage`) |
-| `rarity_name` | `"legendary_weapon"` | Valve identifier (from items_game `rarities`). Stable, used by `marks` |
-| `rarity_name_local` | `"保密级"` | Localized rarity display name following `defaultLanguage` |
-| `quality_name` | `"normal"` | Valve identifier (`normal` / `strange`). Stable, used by `marks` |
-| `quality_name_local` | `"普通"` | Localized quality display name following `defaultLanguage` |
-| `wear_category` | `"wearcategory2"` | Valve identifier (from items_game `wear_blocks`). Stable, used by `marks` |
+| `name` | `"R8左轮手枪 \| 头骨粉碎者"` | CSGO-API zh-CN (Chinese display name) |
+| `hash_name` | `"R8 Revolver \| Skull Crusher (Field-Tested)"` | CSGO-API en + English wear suffix (market standard) |
+| `market_name` | `"R8左轮手枪 \| 头骨粉碎者 (久经沙场)"` | `name` + Chinese wear name |
+| `exterior_name` | `"久经沙场"` | Chinese wear name (from paint_wear thresholds) |
+| `exterior_key` | `"wearcategory2"` | Valve wear identifier. Used by `marks` |
+| `rarity_name` | `"保密级"` | Chinese rarity name (from CSGO-API) |
+| `rarity_key` | `"legendary_weapon"` | Valve rarity identifier (from CSGO-API rarity.id, prefix stripped). Used by `marks` |
+| `quality_name` | `"普通"` | Inferred quality display name (普通 / ★ / StatTrak™ / ★ StatTrak™ / 纪念品) |
+| `quality_key` | `"normal"` | Valve quality identifier (normal / strange / unusual / unusual_strange / tournament). Used by `marks` |
+| `itemset_name` | `"棱彩武器箱"` | Chinese crate/collection name (crates priority, fallback collections) |
+| `itemset_key` | `"set_community_22"` | Valve itemset identifier (from collection-set-xxx id). Used by `marks`. May be null for crate-only items |
 | `recipe` | `4` | Trade-up recipe index (`rarity - 1`, +10 if StatTrak) |
-| `item_set` | `"set_community_22"` | Original key from items_game `item_sets`. Stable, used by `marks` |
-| `item_set_local` | `"棱彩收藏品"` | Localized item set display name following `defaultLanguage` |
-| `pendant` | `null` | Keychain name following `defaultLanguage` (e.g. `"挂件-1234"`). `null` if none |
-| `trade_protect` | `false` | Whether the item is trade-protected (attribute `def_index=312`). Trade-protected items cannot be consumed, modified, or transferred |
+| `pendant` | `null` | Keychain name (e.g. `"挂件-1234"`). `null` if none |
+| `stickers` | `[]` | Structured sticker array (weapon skins only): `[{slot, sticker_id, name, hash_name, wear}]` |
+| `wear_min` | `0.06` | Skin min_float (from CSGO-API). `null` for non-skin items |
+| `wear_max` | `0.8` | Skin max_float (from CSGO-API). `null` for non-skin items |
+| `paint_wear_norm` | `0.35` | Normalized wear: `(paint_wear - wear_min) / (wear_max - wear_min)`. `null` if wear_min == wear_max |
+| `trade_protect` | `false` | Trade-protected (attribute def_index=312) |
+| `item_storage_total` | `null` | Alias for casket_contained_item_count |
 | `msg` | `null` | Enrichment status: `null` = success, string = warning/error |
 
 #### Custom Marks (Optional)
@@ -86,7 +91,10 @@ csgo.init({
         },
         quality: {
             'normal': 'PT',
-            'strange': 'ST'
+            'strange': 'ST',
+            'unusual': 'ST',
+            'unusual_strange': 'ST',
+            'tournament': 'ZN'
         },
         exterior: {
             'wearcategory0': 'ZX',
@@ -104,11 +112,11 @@ When `marks` is provided, items will have these additional fields:
 
 | Field | Key source | Example |
 |---|---|---|
-| `rarity_mark` | `rarity_name` value | `"SX"` |
-| `quality_mark` | `quality_name` value | `"ST"` |
-| `exterior_mark` | `wear_category` value | `"JJ"` |
-| `itemset_mark` | `item_set` value | `"PRIN"` |
-| `mark` | Combined (all 4 required) | `"ST_SX_JJ_PRIN"` |
+| `rarity_mark` | `rarity_key` value | `"SX"` |
+| `quality_mark` | `quality_key` value | `"ST"` |
+| `exterior_mark` | `exterior_key` value | `"JJ"` |
+| `itemset_mark` | `itemset_key` value | `"PRIN"` |
+| `mark` | Combined (all 4 required) | `"ST_BM_JJ_PRIN"` |
 
 If `marks` is not provided, these fields will not exist on item objects.
 
@@ -120,57 +128,45 @@ mark = quality_mark + "_" + rarity_mark + "_" + exterior_mark + "_" + itemset_ma
 
 Example: `"ST_SX_ZX_PRIN"`. If any of the 4 marks is null, `mark` will be an empty string `""`.
 
-#### Multi-Language Support
+#### Bilingual Support
 
-The `name`, `exterior_name`, `market_name`, and all `*_local` fields use **Simplified Chinese** by default (following `defaultLanguage`). `hash_name` is always English (market standard).
-
-Change the default language:
-
-```js
-csgo.init({ defaultLanguage: 'english' });
-// Now item.name / exterior_name / market_name / *_local use English translations
-// item.name = "★ Karambit | Fade" (English)
-```
-
-Add more languages. Each extra language produces `name_{lang}`, `market_name_{lang}`, `rarity_name_{lang}`, `quality_name_{lang}`, and `item_set_{lang}` (when translations exist):
-
-```js
-csgo.init({
-    defaultLanguage: 'french',         // item.name / exterior_name / market_name / rarity_name_local / quality_name_local / item_set_local → French
-    languages: ['japanese', 'tchinese'] // item.name_japanese, item.market_name_japanese, item.rarity_name_japanese, item.quality_name_japanese, item.item_set_japanese ... (same for tchinese)
-});
-```
-
-Supported keywords (29 languages): `brazilian`, `bulgarian`, `czech`, `danish`, `dutch`, `english`, `finnish`, `french`, `german`, `greek`, `hungarian`, `italian`, `japanese`, `koreana`, `latam`, `norwegian`, `polish`, `portuguese`, `romanian`, `russian`, `schinese`, `schinese_pw`, `spanish`, `swedish`, `tchinese`, `thai`, `turkish`, `ukrainian`, `vietnamese`.
+Item names use **Chinese** (`name`, `market_name`, `exterior_name`, `rarity_name`, etc.) from CSGO-API zh-CN data. `hash_name` is always English (market standard) from CSGO-API en data. Valve identifiers (`*_key` fields) are language-independent.
 
 ### Utility APIs
 
 | API | Description |
 |---|---|
 | `await csgo.ready()` | Wait for enricher data to be loaded. Returns a Promise. |
-| `csgo.init(opts)` | Configure enricher options (languages, marks, dataDir, etc.). Called automatically on construction with defaults; call this to customize. **Each call replaces all previous options** (not merged). |
+| `csgo.init(opts)` | Configure enricher options (marks, dataDir, etc.). Called automatically on construction with defaults; call this to customize. **Each call replaces all previous options** (not merged). |
 | `csgo.manifestId` | CS2 manifest ID of the currently loaded schema data (read-only) |
 | `csgo.on('enricherReady', fn)` | Emitted when enricher data is loaded. If inventory is already available, it will be batch-enriched at this point. If not, items will be enriched automatically when GC connects. |
 | `csgo.on('enricherError', fn)` | Emitted if enricher fails to load data |
+| `csgo.on('downloadStart', fn)` | Emitted when CSGO-API data download begins. Payload: `{files, total}` |
+| `csgo.on('fileProgress', fn)` | Per-file download progress. Payload: `{key, label, phase, bytesDownloaded?, bytesTotal?, percent?}` |
+| `csgo.on('downloadProgress', fn)` | Overall download progress. Payload: `{completed, total, overallPercent}` |
+| `csgo.on('fileError', fn)` | Single file download error (retryable). Payload: `{key, label, error, attempt}` |
+| `csgo.on('downloadDone', fn)` | All downloads complete. Payload: `{results, succeeded, failed}` |
 
 #### `init(opts)` Options
 
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `dataDir` | string | `./cs2-inventory-schema` | Custom data directory |
-| `defaultLanguage` | string | `schinese` | Language for the `name` field. Auto-downloaded if not schinese/english |
-| `languages` | string[] | `[]` | Additional languages for `name_{lang}` fields |
 | `marks` | object | `null` | Custom mark mappings (see [Custom Marks](#custom-marks-optional)) |
 | `checkIntervalHours` | number | `24` | Update check interval |
 | `forceUpdate` | boolean | `false` | Force re-download all files |
+| `onDownloadProgress` | function | `null` | Callback for overall download progress: `(info) => {}` where info is `{completed, total, overallPercent}` |
 
 ### Data Source & Auto-Update
 
-Item schema data is automatically downloaded from [ByMykel/counter-strike-file-tracker](https://github.com/ByMykel/counter-strike-file-tracker):
+Item data is automatically downloaded from [ByMykel/CSGO-API](https://github.com/ByMykel/CSGO-API) — a community-maintained structured JSON API:
 
-- **First use**: Downloads ~20MB (items_game + schinese + english JSON)
-- **Each startup**: Checks GitHub API for SHA changes (~3KB). Downloads only if updated or if 24 hours have passed since last download.
+- **16 files** (8 item types x zh-CN + en): skins, music_kits, graffiti, keychains, sticker_slabs, highlights, stickers, collectibles
+- **Parallel download** with concurrency limit 8, 3 retries per file
+- **First use**: Downloads ~5MB
+- **Each startup**: Checks canary file SHA via GitHub API. Downloads only if updated or if 24 hours have passed.
 - **Cache location**: `./cs2-inventory-schema/` (add to `.gitignore`)
+- **Progress events**: `csgo.on('downloadProgress', fn)` or `init({ onDownloadProgress: fn })`
 - **Force update**: `csgo.init({ forceUpdate: true })`
 
 ---
@@ -191,13 +187,13 @@ let user = new SteamUser();
 let csgo = new GlobalOffensive(user);
 
 csgo.on('connectedToGC', async () => {
-    // Wait for enricher to finish downloading item data (~20MB on first run)
+    // Wait for enricher to finish downloading item data (~5MB on first run)
     await csgo.ready();
 
     // Now all items are enriched with name, hash_name, rarity_name, etc.
     console.log(`Inventory: ${csgo.inventory.length} items`);
     csgo.inventory.forEach(item => {
-        console.log(`${item.name} (${item.exterior_name}) [${item.rarity_name}]`);
+        console.log(`${item.name} (${item.exterior_name}) [${item.rarity_key}]`);
     });
 });
 
