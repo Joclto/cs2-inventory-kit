@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/Joclto/cs2-inventory-kit/compare/v2.1.0...v2.1.1) (2026-07-01)
+
+
+### Bug Fixes
+
+* market_name concatenating null when item has no paint_wear ([af49c81](https://github.com/Joclto/cs2-inventory-kit/commit/af49c810c8ca152144de3cf069c6fed7ce091f5d))
+
 ## [2.1.0](https://github.com/Joclto/cs2-inventory-kit/compare/v2.0.2...v2.1.0) (2026-07-01)
 
 
