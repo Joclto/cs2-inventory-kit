@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.2](https://github.com/Joclto/cs2-inventory-kit/compare/v2.0.1...v2.0.2) (2026-07-01)
+
+
+### Bug Fixes
+
+* add missing var self declaration in constructor setImmediate ([755d99e](https://github.com/Joclto/cs2-inventory-kit/commit/755d99e86a43f55295425411db83b34dac3c0870))
+
 ## [2.0.1](https://github.com/Joclto/cs2-inventory-kit/compare/v2.0.0...v2.0.1) (2026-07-01)
 
 
