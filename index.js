@@ -128,6 +128,7 @@ function GlobalOffensive(steam) {
 
 	// 延迟启动 enricher：如果用户在同一个 tick 里调了 init()，_enricherGeneration 已变，
 	// 此处检测到后跳过，避免重复下载。这样 init() 触发的下载事件能被外部监听者完整捕获。
+	var self = this;
 	var ctorGeneration = this._enricherGeneration;
 	setImmediate(function() {
 		if (ctorGeneration !== self._enricherGeneration) {
