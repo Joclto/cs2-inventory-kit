@@ -136,8 +136,20 @@ GlobalOffensive.prototype._initEnricher = function(opts) {
 	this._dataLoader = new DataLoader(dataDir);
 	this._enricherGeneration++;
 	var myGeneration = this._enricherGeneration;
+	var self = this;
 
-	this._dataLoader.load(opts).then((data) => {
+	// 转发 DataLoader 下载事件到 GlobalOffensive 实例（供外部 csgo.on('downloadProgress', ...) 使用）
+	this._dataLoader.on('downloadStart', function(info) { self.emit('downloadStart', info); });
+	this._dataLoader.on('fileProgress', function(info) { self.emit('fileProgress', info); });
+	this._dataLoader.on('progress', function(info) { self.emit('downloadProgress', info); });
+	this._dataLoader.on('fileError', function(info) { self.emit('fileError', info); });
+	this._dataLoader.on('downloadDone', function(info) { self.emit('downloadDone', info); });
+
+	this._dataLoader.load({
+		forceUpdate: opts.forceUpdate,
+		checkIntervalHours: opts.checkIntervalHours,
+		onDownloadProgress: opts.onDownloadProgress
+	}).then((data) => {
 		// 检查是否是最新的初始化（防止构造函数和 init() 并行调用互相覆盖）
 		if (myGeneration !== this._enricherGeneration) {
 			this.emit('debug', 'Enricher: skipping outdated init (generation ' + myGeneration + ')');
@@ -207,23 +219,16 @@ GlobalOffensive.prototype.ready = function() {
  * Re-initialize enricher with custom options.
  * @param {object} [opts]
  * @param {string} [opts.dataDir] - Custom data directory (default: ./cs2-inventory-schema)
- * @param {string[]} [opts.languages] - Additional languages for item name translation.
- *   Each language adds a `name_{lang}` field to item objects (e.g. name_french).
- *   Supported keywords: brazilian, bulgarian, czech, danish, dutch, english, finnish,
- *     french, german, greek, hungarian, italian, japanese, koreana, latam, norwegian,
- *     polish, portuguese, romanian, russian, schinese, schinese_pw, spanish, swedish,
- *     tchinese, thai, turkish, ukrainian, vietnamese
- *   Example: init({ languages: ['french', 'japanese'] })
- * @param {string} [opts.defaultLanguage] - Language for the `name` field (default: schinese).
- *   If set to a language other than schinese/english, it will be auto-downloaded.
- *   Example: init({ defaultLanguage: 'english' }) → item.name uses English translations.
- *   `hash_name` and `exterior_name` are always English (market standard).
  * @param {number} [opts.checkIntervalHours] - Update check interval in hours (default 24)
  * @param {boolean} [opts.forceUpdate] - Force re-download all files
  * @param {object} [opts.marks] - Custom mark mappings. When provided, items will have
  *   `rarity_mark` / `quality_mark` / `exterior_mark` / `itemset_mark` fields.
- *   Example: init({ marks: { rarity: {mythical_weapon:'SX'}, quality: {strange:'ST'},
- *   exterior: {wearcategory0:'ZX'}, itemset: {set_community_3:'PRIN'} } })
+ *   Keys are Valve identifiers: rarity (e.g. {'ancient_weapon':'YM'}),
+ *   quality (e.g. {'normal':'PT','strange':'ST','unusual_strange':'ST','unusual':'??','tournament':'ZN'}),
+ *   exterior (e.g. {'wearcategory0':'ZX'}), itemset (e.g. {'set_community_3':'PRIN'}).
+ * @param {function} [opts.onDownloadProgress] - Callback for overall download progress.
+ *   Receives {completed, total, overallPercent}. For finer events, listen to
+ *   csgo.on('downloadStart'|'fileProgress'|'downloadProgress'|'fileError'|'downloadDone', fn).
  */
 GlobalOffensive.prototype.init = function(opts) {
 	this._enricherReady = false;
