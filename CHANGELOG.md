@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/Joclto/cs2-inventory-kit/compare/v2.0.2...v2.1.0) (2026-07-01)
+
+
+### Features
+
+* add exterior_mark_norm, mark_norm, and hash_wear_seed_key fields ([d1bf6ae](https://github.com/Joclto/cs2-inventory-kit/commit/d1bf6ae1e282b1fe58aa50292cde43ce84afebc2))
+
 ## [2.0.2](https://github.com/Joclto/cs2-inventory-kit/compare/v2.0.1...v2.0.2) (2026-07-01)
 
 
