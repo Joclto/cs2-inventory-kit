@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/Joclto/cs2-inventory-kit/compare/v2.0.0...v2.0.1) (2026-07-01)
+
+
+### Bug Fixes
+
+* defer enricher init to next tick so download events are catchable ([9a6ceaf](https://github.com/Joclto/cs2-inventory-kit/commit/9a6ceafeea236e17c49791b5e9c32096f3ac1517))
+
 ## [2.0.0](https://github.com/Joclto/cs2-inventory-kit/compare/v1.2.2...v2.0.0) (2026-07-01)
 
 
