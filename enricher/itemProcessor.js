@@ -774,9 +774,9 @@ class ItemProcessor {
                 result.hash_name = result.hash_name + ' (' + extEn + ')';
             }
 
-            // market_name = name + " (中文磨损名)"
+            // market_name = name + " (中文磨损名)"（无磨损时等于 name）
             if (result.name) {
-                result.market_name = result.name + (extCn ? ' (' + extCn + ')' : null);
+                result.market_name = extCn ? (result.name + ' (' + extCn + ')') : result.name;
             }
 
             // hash_wear_seed_key：组合匹配键（hash_name|paint_wear_20位|paint_seed）
