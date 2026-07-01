@@ -34,6 +34,36 @@ const WEAR_NAMES_EN = ['Factory New', 'Minimal Wear', 'Field-Tested', 'Well-Worn
 // null 字节作为复合 key 的分隔符（weapon_id / paint_index 均为数字串，不会冲突）
 const KEY_SEP = '\u0000';
 
+/**
+ * 将磨损值规范化为 20 位小数字符串（向下截断，不四舍五入）。
+ * 对齐 Python Tools.normalize_float_wear 的 Decimal quantize ROUND_DOWN 行为。
+ *
+ * JS Number 是 IEEE 754 double（64位），String(number) 输出最短可标识字符串。
+ * 截断到 20 位小数，不足补零，与 Python Decimal(str(wear)).quantize(20位, ROUND_DOWN) 一致。
+ *
+ * @param {number|null|undefined} wearVal
+ * @returns {string|null} 20 位小数字符串，或 null（输入为空时）
+ */
+function normalizeFloatWear(wearVal) {
+    if (wearVal === null || wearVal === undefined) return null;
+    const s = String(wearVal);
+    const dotIdx = s.indexOf('.');
+    if (dotIdx === -1) {
+        // 整数：补 .00000000000000000000
+        return s + '.00000000000000000000';
+    }
+    const intPart = s.substring(0, dotIdx);
+    let fracPart = s.substring(dotIdx + 1);
+    if (fracPart.length >= 20) {
+        // 截断到 20 位（向下截断，不四舍五入）
+        fracPart = fracPart.substring(0, 20);
+    } else {
+        // 不足 20 位补零
+        fracPart = fracPart + '0'.repeat(20 - fracPart.length);
+    }
+    return intPart + '.' + fracPart;
+}
+
 class ItemProcessor {
     /**
      * @param {object} data DataLoader.load() 的返回 + opts.marks
@@ -453,10 +483,11 @@ class ItemProcessor {
             'name', 'hash_name', 'market_name', 'item_set',
             'itemset_mark', 'itemset_name', 'itemset_key', 'pendant',
             'exterior_name', 'exterior_mark', 'exterior_key',
+            'exterior_mark_norm', 'exterior_key_norm',
             'rarity_name', 'rarity_mark', 'rarity_key',
             'quality_name', 'quality_mark', 'quality_key',
             'wear_category', 'rarity_name_local',
-            'quality_name_local', 'recipe', 'mark', 'msg'
+            'quality_name_local', 'recipe', 'mark', 'mark_norm', 'hash_wear_seed_key', 'msg'
         ];
         for (const k of staleKeys) {
             delete storageRow[k];
@@ -483,18 +514,20 @@ class ItemProcessor {
             casket_contained_item_count: casketCount ?? null,
             tradable_after: storageRow.tradable_after ?? null,
             item_storage_total: casketCount ?? null, // 新增，别名
-            // 解析字段（默认值）
+            // 解析字段（默认值统一为 null）
             trade_protect: false,
-            name: '',
-            hash_name: '',
-            market_name: '',
-            exterior_name: '',
+            name: null,
+            hash_name: null,
+            market_name: null,
+            exterior_name: null,
             exterior_key: null,
-            rarity_name: '',
+            exterior_mark_norm: null,
+            exterior_key_norm: null,
+            rarity_name: null,
             rarity_key: null,
-            quality_name: '',
+            quality_name: null,
             quality_key: null,
-            itemset_name: '',
+            itemset_name: null,
             itemset_key: null,
             pendant: null,
             recipe: null,
@@ -502,6 +535,7 @@ class ItemProcessor {
             wear_min: null,
             wear_max: null,
             paint_wear_norm: null,
+            hash_wear_seed_key: null,
             msg: null
         };
 
@@ -726,8 +760,14 @@ class ItemProcessor {
             const extEn = wearInfo[1];
             const extKey = wearInfo[2];
 
-            result.exterior_name = extCn || '';
+            result.exterior_name = extCn || null;
             result.exterior_key = extKey;
+
+            // 基于归一化磨损的 exterior_key_norm（用于 mark_norm）
+            if (result.paint_wear_norm !== null) {
+                const normInfo = this._getWearInfo(result.paint_wear_norm);
+                result.exterior_key_norm = normInfo[2];
+            }
 
             // hash_name 追加 " (英文磨损名)"
             if (paintWear !== undefined && paintWear !== null && extEn && result.hash_name) {
@@ -736,7 +776,21 @@ class ItemProcessor {
 
             // market_name = name + " (中文磨损名)"
             if (result.name) {
-                result.market_name = result.name + (extCn ? ' (' + extCn + ')' : '');
+                result.market_name = result.name + (extCn ? ' (' + extCn + ')' : null);
+            }
+
+            // hash_wear_seed_key：组合匹配键（hash_name|paint_wear_20位|paint_seed）
+            // 此时 hash_name 已含磨损后缀（如 "AK-47 | Redline (Field-Tested)"）
+            {
+                const wearStr = normalizeFloatWear(result.paint_wear);
+                const hn = result.hash_name;
+                const ps = result.paint_seed;
+                if (hn && wearStr !== null && ps !== null) {
+                    result.hash_wear_seed_key = hn + '|' + wearStr + '|' + ps;
+                } else {
+                    const assetid = result.assetid;
+                    result.hash_wear_seed_key = (assetid !== null && assetid !== undefined) ? String(assetid) : '';
+                }
             }
 
             // ===== 6. quality_name + quality_key（基于 attribute + quality int 综合推断）=====
@@ -783,12 +837,28 @@ class ItemProcessor {
                 result.exterior_mark = exteriorMark;
                 result.itemset_mark = itemsetMark;
 
-                // 组合 mark（4 个都有效才拼接，照搬 Python L601-605）
+                // 组合 mark（4 个都有效才拼接）
                 const parts = [qualityMark, rarityMark, exteriorMark, itemsetMark];
                 const allValid = parts.every(function (m) {
                     return m !== null && m !== undefined && m !== '';
                 });
-                result.mark = allValid ? parts.join('_') : '';
+                result.mark = allValid ? parts.join('_') : null;
+
+                // 基于 paint_wear_norm 的 exterior_mark_norm + mark_norm
+                if (result.exterior_key_norm !== null) {
+                    let exteriorMarkNorm = null;
+                    if (this.marks.exterior && result.exterior_key_norm) {
+                        const v = this.marks.exterior[result.exterior_key_norm];
+                        exteriorMarkNorm = (v !== undefined && v !== null) ? v : null;
+                    }
+                    result.exterior_mark_norm = exteriorMarkNorm;
+
+                    const normParts = [qualityMark, rarityMark, exteriorMarkNorm, itemsetMark];
+                    const normAllValid = normParts.every(function (m) {
+                        return m !== null && m !== undefined && m !== '';
+                    });
+                    result.mark_norm = normAllValid ? normParts.join('_') : null;
+                }
             }
 
             // ===== 9. pendant（照搬 Python L607，对所有物品类型调用）=====
