@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.2](https://github.com/Joclto/cs2-inventory-kit/compare/v2.1.1...v2.1.2) (2026-07-13)
+
+
+### Bug Fixes
+
+* pendant fallback to highlight_index when keychainVal unmatched ([7b5f1c8](https://github.com/Joclto/cs2-inventory-kit/commit/7b5f1c8af227595e3ba9e4f102fb9d76c1ee4193))
+
 ## [2.1.1](https://github.com/Joclto/cs2-inventory-kit/compare/v2.1.0...v2.1.1) (2026-07-01)
 
 
