@@ -402,6 +402,11 @@ class ItemProcessor {
         if (templateId !== null) {
             return '挂件-' + templateId;
         }
+        // 高光回退：keychainVal 不匹配 36/37 或普通挂件查不到时，尝试用 highlight_index
+        if (highlightIndex !== null) {
+            const hl = this._highlightIndex[String(highlightIndex)];
+            if (hl) return hl.name || '';
+        }
         return '存在挂件';
     }
 
