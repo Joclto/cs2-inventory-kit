@@ -1,6 +1,6 @@
 {
 	"name": "cs2-inventory-kit",
-	"version": "2.1.2",
+	"version": "2.2.0",
 	"description": "Inventory-focused CS2 Game Coordinator library with built-in item data enrichment. Fork of node-globaloffensive.",
 	"main": "index.js",
 	"keywords": [
@@ -29,6 +29,7 @@
 		"@doctormckay/stdlib": "^2.10.0",
 		"bytebuffer": "^5.0.1",
 		"globaloffensive-sharecode": "^1.1.1",
+		"https-proxy-agent": "^7.0.0",
 		"long": "^5.2.3",
 		"protobufjs": "^7.2.5",
 		"steamid": "^2.0.0"

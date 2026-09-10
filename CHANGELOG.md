@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/Joclto/cs2-inventory-kit/compare/v2.1.2...v2.2.0) (2026-09-10)
+
+
+### Features
+
+* auto-detect system proxy for CSGO-API data downloads: `opts.proxy` URL / `false` to disable / HTTPS_PROXY & HTTP_PROXY env vars / Windows system proxy (registry Internet Settings, used by Clash/V2Ray). Only affects data downloads, not the Steam connection.
+
 ## [2.1.2](https://github.com/Joclto/cs2-inventory-kit/compare/v2.1.1...v2.1.2) (2026-07-13)
 
 

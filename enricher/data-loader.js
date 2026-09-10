@@ -21,12 +21,13 @@
  *
  * 参考：Python 版 ByMykel/CSGO-API 下载器（cs2_data_service.py）。
  *
- * 仅依赖 Node.js 内置模块（fs, path, https, events）。
+ * 依赖 Node.js 内置模块（fs, path, https, events, child_process）+ https-proxy-agent。
  */
 
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+const { execSync } = require('child_process');
 const { EventEmitter } = require('events');
 
 const CSGO_API_REPO = 'ByMykel/CSGO-API';
@@ -76,13 +77,125 @@ const CANARY = ENDPOINTS.find((ep) => ep.key === 'skinsZhCN');
 class DataLoader extends EventEmitter {
     /**
      * @param {string} dataDir 本地数据存储目录
+     * @param {object} [opts]
+     * @param {string|boolean} [opts.proxy] 代理设置：
+     *        - string：显式代理 URL（如 'http://127.0.0.1:7890'）
+     *        - false：强制直连（禁用自动检测）
+     *        - undefined：自动检测（环境变量 HTTPS_PROXY/HTTP_PROXY → Windows 系统代理）
      */
-    constructor(dataDir) {
+    constructor(dataDir, opts = {}) {
         super();
         this.dataDir = dataDir;
         this.cachePath = path.join(dataDir, 'cache.json');
         /** @type {((payload: object) => void)|null} 便利进度回调通道 */
         this._onDownloadProgress = null;
+        this._proxyOpt = opts.proxy;
+        /** @type {import('https').Agent|null|undefined} 懒创建的代理 agent（undefined=未初始化） */
+        this._proxyAgent = undefined;
+    }
+
+    // ============================================================
+    // 代理支持（自动检测系统代理）
+    // ============================================================
+
+    /**
+     * 按优先级解析代理 URL：
+     *   1. opts.proxy === false → 显式禁用（返回 null）
+     *   2. opts.proxy 为字符串 → 直接使用
+     *   3. 环境变量 HTTPS_PROXY / https_proxy / HTTP_PROXY / http_proxy
+     *   4. Windows 系统代理（注册表 Internet Settings，Clash 等开关系统代理即写此处）
+     * @returns {string|null} 代理 URL（如 'http://127.0.0.1:7890'），null 表示直连
+     */
+    _detectProxyUrl() {
+        if (this._proxyOpt === false) return null;
+        if (typeof this._proxyOpt === 'string' && this._proxyOpt) {
+            return this._proxyOpt.includes('://') ? this._proxyOpt : `http://${this._proxyOpt}`;
+        }
+
+        const env =
+            process.env.HTTPS_PROXY || process.env.https_proxy ||
+            process.env.HTTP_PROXY || process.env.http_proxy;
+        if (env) return env;
+
+        if (process.platform === 'win32') {
+            try {
+                return this._readWindowsSystemProxy();
+            } catch (e) {
+                // 注册表读取失败（权限/环境异常）→ 静默降级为直连
+                return null;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 读取 Windows 系统代理设置（当前用户注册表）。
+     * Clash/V2Ray 等开启"系统代理"时会写入 ProxyEnable=1 和 ProxyServer。
+     * @returns {string|null}
+     */
+    _readWindowsSystemProxy() {
+        const key = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings';
+        const query = (value) =>
+            execSync(`reg query "${key}" /v ${value}`, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'], timeout: 3000 });
+
+        const enabled = query('ProxyEnable');
+        if (!/ProxyEnable\s+REG_DWORD\s+0x1/i.test(enabled)) return null;
+
+        let server;
+        try {
+            const m = query('ProxyServer').match(/ProxyServer\s+REG_SZ\s+(\S+)/);
+            server = m ? m[1] : null;
+        } catch (_) {
+            server = null;
+        }
+        if (!server) return null;
+
+        // ProxyServer 两种格式：
+        //   '127.0.0.1:7890'（全部协议）或 'http=127.0.0.1:7890;https=127.0.0.1:7890'（分协议）
+        let proxy = server;
+        if (server.includes('=')) {
+            const entries = server.split(';').map((s) => s.split('='));
+            proxy =
+                (entries.find(([k]) => k === 'https') || entries.find(([k]) => k === 'http') || [])[1] || null;
+        }
+        if (!proxy) return null;
+        return proxy.includes('://') ? proxy : `http://${proxy}`;
+    }
+
+    /**
+     * 获取（懒创建）代理 agent。直连时返回 null。
+     * 仅对 GitHub 数据下载请求生效，不影响调用方其他网络连接。
+     * @returns {import('https').Agent|null}
+     */
+    _getProxyAgent() {
+        if (this._proxyAgent !== undefined) return this._proxyAgent;
+        const proxyUrl = this._detectProxyUrl();
+        if (!proxyUrl) {
+            this._proxyAgent = null;
+        } else {
+            try {
+                // 懒 require：未安装 https-proxy-agent 时退化为直连而非崩溃
+                const { HttpsProxyAgent } = require('https-proxy-agent');
+                this._proxyAgent = new HttpsProxyAgent(proxyUrl);
+                console.log(`[DataLoader] 使用代理下载数据: ${proxyUrl}`);
+            } catch (e) {
+                console.warn(`[DataLoader] 代理 ${proxyUrl} 初始化失败（缺少 https-proxy-agent?），回退直连: ${e.message}`);
+                this._proxyAgent = null;
+            }
+        }
+        return this._proxyAgent;
+    }
+
+    /**
+     * 构造 https.get 请求选项（统一挂代理 agent）。
+     * @param {number} timeout
+     */
+    _requestOptions(timeout) {
+        return {
+            headers: { 'User-Agent': 'cs2-inventory-kit' },
+            timeout,
+            agent: this._getProxyAgent() || undefined,
+        };
     }
 
     /**
@@ -250,7 +363,7 @@ class DataLoader extends EventEmitter {
         return new Promise((resolve, reject) => {
             const req = https.get(
                 MANIFEST_ID_URL,
-                { headers: { 'User-Agent': 'cs2-inventory-kit' }, timeout: 10000 },
+                this._requestOptions(10000),
                 (res) => {
                     if (res.statusCode !== 200) {
                         res.resume();
@@ -417,7 +530,7 @@ class DataLoader extends EventEmitter {
 
             const req = https.get(
                 ep.remoteUrl,
-                { headers: { 'User-Agent': 'cs2-inventory-kit' }, timeout: 30000 },
+                this._requestOptions(30000),
                 (res) => {
                     if (res.statusCode !== 200) {
                         fail(new Error(`HTTP ${res.statusCode} for ${ep.localFile}`));
@@ -541,7 +654,7 @@ class DataLoader extends EventEmitter {
         return new Promise((resolve, reject) => {
             const req = https.get(
                 url,
-                { headers: { 'User-Agent': 'cs2-inventory-kit' }, timeout: 10000 },
+                this._requestOptions(10000),
                 (res) => {
                     let data = '';
                     res.on('data', (chunk) => (data += chunk));

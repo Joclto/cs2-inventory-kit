@@ -142,7 +142,7 @@ function GlobalOffensive(steam) {
 GlobalOffensive.prototype._initEnricher = function(opts) {
 	opts = opts || {};
 	var dataDir = opts.dataDir || path.join(process.cwd(), 'cs2-inventory-schema');
-	this._dataLoader = new DataLoader(dataDir);
+	this._dataLoader = new DataLoader(dataDir, { proxy: opts.proxy });
 	this._enricherGeneration++;
 	var myGeneration = this._enricherGeneration;
 	var self = this;
@@ -228,6 +228,11 @@ GlobalOffensive.prototype.ready = function() {
  * Re-initialize enricher with custom options.
  * @param {object} [opts]
  * @param {string} [opts.dataDir] - Custom data directory (default: ./cs2-inventory-schema)
+ * @param {string|boolean} [opts.proxy] - Proxy for CSGO-API data downloads. A string is an
+ *   explicit proxy URL (e.g. 'http://127.0.0.1:7890'); `false` forces direct connection;
+ *   by default the loader auto-detects HTTPS_PROXY/HTTP_PROXY env vars and the Windows
+ *   system proxy (registry Internet Settings, used by Clash/V2Ray "system proxy").
+ *   Only affects data downloads, not the Steam connection.
  * @param {number} [opts.checkIntervalHours] - Update check interval in hours (default 24)
  * @param {boolean} [opts.forceUpdate] - Force re-download all files
  * @param {object} [opts.marks] - Custom mark mappings. When provided, items will have
