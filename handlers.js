@@ -142,6 +142,13 @@ handlers[Language.CraftResponse] = function(body) {
 	let idCount = body.readUint16();
 	let idList = []; // let's form an array of IDs
 
+	if (idCount == 0xFFFF) {
+		// The GC signals a failed craft with an item count of -1
+		this.emit('debug', "Crafting failed for recipe " + blueprint);
+		this.emit('craftingFailed', blueprint);
+		return;
+	}
+
 	for (let i = 0; i < idCount; i++) {
 		let id = body.readUint64().toString(); // grab the next id
 		idList.push(id); // item id

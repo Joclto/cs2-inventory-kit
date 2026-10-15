@@ -486,19 +486,17 @@ GlobalOffensive.prototype.deleteItem = function(itemId) {
 };
 
 /**
- * Craft some items using a given recipe.
- * @param {int[]} items - IDs of items to craft
- * @param {int} recipe - The ID of the recipe to use
+ * Craft some items using a given recipe (e.g. a Trade-Up Contract).
+ * Since the CS2 update 1.41.9.0 (2026-10-08), this request is protobuf-encoded
+ * (CMsgCraftItemsRequest) instead of the legacy raw binary struct.
+ * @param {int[]|string[]} items - IDs of items to craft
+ * @param {int} recipe - The ID of the recipe to use (0-4 normal, 10-14 StatTrak)
  */
 GlobalOffensive.prototype.craft = function(items, recipe) {
-	let buffer = new ByteBuffer(2 + 2 + (8 * items.length), ByteBuffer.LITTLE_ENDIAN);
-	buffer.writeInt16(recipe);
-	buffer.writeInt16(items.length);
-	for (let i = 0; i < items.length; i++) {
-		buffer.writeUint64(items[i]);
-	}
-
-	this._send(Language.Craft, null, buffer);
+	this._send(Language.Craft, Protos.CMsgCraftItemsRequest, {
+		recipe_def: recipe,
+		craft_items: items
+	});
 };
 
 // Storage units

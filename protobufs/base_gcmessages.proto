@@ -241,6 +241,11 @@ message CMsgSortItems {
 	optional uint32 sort_type = 1;
 }
 
+message CMsgCraftItemsRequest {
+	optional uint32 recipe_def = 1;
+	repeated uint64 craft_items = 2;
+}
+
 message CSOEconClaimCode {
 	optional uint32 account_id = 1;
 	optional uint32 code_type = 2;

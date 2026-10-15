@@ -9561,6 +9561,290 @@
         return CMsgSortItems;
     })();
     
+    $root.CMsgCraftItemsRequest = (function() {
+    
+        /**
+         * Properties of a CMsgCraftItemsRequest.
+         * @exports ICMsgCraftItemsRequest
+         * @interface ICMsgCraftItemsRequest
+         * @property {number|null} [recipe_def] CMsgCraftItemsRequest recipe_def
+         * @property {Array.<number|Long>|null} [craft_items] CMsgCraftItemsRequest craft_items
+         */
+    
+        /**
+         * Constructs a new CMsgCraftItemsRequest.
+         * @exports CMsgCraftItemsRequest
+         * @classdesc Represents a CMsgCraftItemsRequest.
+         * @implements ICMsgCraftItemsRequest
+         * @constructor
+         * @param {ICMsgCraftItemsRequest=} [properties] Properties to set
+         */
+        function CMsgCraftItemsRequest(properties) {
+            this.craft_items = [];
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null && keys[i] !== "__proto__")
+                        this[keys[i]] = properties[keys[i]];
+        }
+    
+        /**
+         * CMsgCraftItemsRequest recipe_def.
+         * @member {number} recipe_def
+         * @memberof CMsgCraftItemsRequest
+         * @instance
+         */
+        CMsgCraftItemsRequest.prototype.recipe_def = 0;
+    
+        /**
+         * CMsgCraftItemsRequest craft_items.
+         * @member {Array.<number|Long>} craft_items
+         * @memberof CMsgCraftItemsRequest
+         * @instance
+         */
+        CMsgCraftItemsRequest.prototype.craft_items = $util.emptyArray;
+    
+        /**
+         * Creates a new CMsgCraftItemsRequest instance using the specified properties.
+         * @function create
+         * @memberof CMsgCraftItemsRequest
+         * @static
+         * @param {ICMsgCraftItemsRequest=} [properties] Properties to set
+         * @returns {CMsgCraftItemsRequest} CMsgCraftItemsRequest instance
+         */
+        CMsgCraftItemsRequest.create = function create(properties) {
+            return new CMsgCraftItemsRequest(properties);
+        };
+    
+        /**
+         * Encodes the specified CMsgCraftItemsRequest message. Does not implicitly {@link CMsgCraftItemsRequest.verify|verify} messages.
+         * @function encode
+         * @memberof CMsgCraftItemsRequest
+         * @static
+         * @param {ICMsgCraftItemsRequest} message CMsgCraftItemsRequest message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        CMsgCraftItemsRequest.encode = function encode(message, writer, q) {
+            if (!writer)
+                writer = $Writer.create();
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            if (message.recipe_def != null && Object.hasOwnProperty.call(message, "recipe_def"))
+                writer.uint32(/* id 1, wireType 0 =*/8).uint32(message.recipe_def);
+            if (message.craft_items != null && message.craft_items.length)
+                for (var i = 0; i < message.craft_items.length; ++i)
+                    writer.uint32(/* id 2, wireType 0 =*/16).uint64(message.craft_items[i]);
+            return writer;
+        };
+    
+        /**
+         * Encodes the specified CMsgCraftItemsRequest message, length delimited. Does not implicitly {@link CMsgCraftItemsRequest.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof CMsgCraftItemsRequest
+         * @static
+         * @param {ICMsgCraftItemsRequest} message CMsgCraftItemsRequest message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        CMsgCraftItemsRequest.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer && writer.len ? writer.fork() : writer).ldelim();
+        };
+    
+        /**
+         * Decodes a CMsgCraftItemsRequest message from the specified reader or buffer.
+         * @function decode
+         * @memberof CMsgCraftItemsRequest
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {CMsgCraftItemsRequest} CMsgCraftItemsRequest
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        CMsgCraftItemsRequest.decode = function decode(reader, length, error, long) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            if (long === undefined)
+                long = 0;
+            if (long > $Reader.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.CMsgCraftItemsRequest();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                if (tag === error)
+                    break;
+                switch (tag >>> 3) {
+                case 1: {
+                        message.recipe_def = reader.uint32();
+                        break;
+                    }
+                case 2: {
+                        if (!(message.craft_items && message.craft_items.length))
+                            message.craft_items = [];
+                        if ((tag & 7) === 2) {
+                            var end2 = reader.uint32() + reader.pos;
+                            while (reader.pos < end2)
+                                message.craft_items.push(reader.uint64());
+                        } else
+                            message.craft_items.push(reader.uint64());
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7, long);
+                    break;
+                }
+            }
+            return message;
+        };
+    
+        /**
+         * Decodes a CMsgCraftItemsRequest message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof CMsgCraftItemsRequest
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {CMsgCraftItemsRequest} CMsgCraftItemsRequest
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        CMsgCraftItemsRequest.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+    
+        /**
+         * Verifies a CMsgCraftItemsRequest message.
+         * @function verify
+         * @memberof CMsgCraftItemsRequest
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        CMsgCraftItemsRequest.verify = function verify(message, long) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                return "maximum nesting depth exceeded";
+            if (message.recipe_def != null && Object.hasOwnProperty.call(message, "recipe_def"))
+                if (!$util.isInteger(message.recipe_def))
+                    return "recipe_def: integer expected";
+            if (message.craft_items != null && Object.hasOwnProperty.call(message, "craft_items")) {
+                if (!Array.isArray(message.craft_items))
+                    return "craft_items: array expected";
+                for (var i = 0; i < message.craft_items.length; ++i)
+                    if (!$util.isInteger(message.craft_items[i]) && !(message.craft_items[i] && $util.isInteger(message.craft_items[i].low) && $util.isInteger(message.craft_items[i].high)))
+                        return "craft_items: integer|Long[] expected";
+            }
+            return null;
+        };
+    
+        /**
+         * Creates a CMsgCraftItemsRequest message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof CMsgCraftItemsRequest
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {CMsgCraftItemsRequest} CMsgCraftItemsRequest
+         */
+        CMsgCraftItemsRequest.fromObject = function fromObject(object, long) {
+            if (object instanceof $root.CMsgCraftItemsRequest)
+                return object;
+            if (!$util.isObject(object))
+                throw TypeError(".CMsgCraftItemsRequest: object expected");
+            if (long === undefined)
+                long = 0;
+            if (long > $util.recursionLimit)
+                throw Error("maximum nesting depth exceeded");
+            var message = new $root.CMsgCraftItemsRequest();
+            if (object.recipe_def != null)
+                message.recipe_def = object.recipe_def >>> 0;
+            if (object.craft_items) {
+                if (!Array.isArray(object.craft_items))
+                    throw TypeError(".CMsgCraftItemsRequest.craft_items: array expected");
+                message.craft_items = [];
+                for (var i = 0; i < object.craft_items.length; ++i)
+                    if ($util.Long)
+                        message.craft_items[i] = $util.Long.fromValue(object.craft_items[i], true);
+                    else if (typeof object.craft_items[i] === "string")
+                        message.craft_items[i] = parseInt(object.craft_items[i], 10);
+                    else if (typeof object.craft_items[i] === "number")
+                        message.craft_items[i] = object.craft_items[i];
+                    else if (typeof object.craft_items[i] === "object")
+                        message.craft_items[i] = new $util.LongBits(object.craft_items[i].low >>> 0, object.craft_items[i].high >>> 0).toNumber(true);
+            }
+            return message;
+        };
+    
+        /**
+         * Creates a plain object from a CMsgCraftItemsRequest message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof CMsgCraftItemsRequest
+         * @static
+         * @param {CMsgCraftItemsRequest} message CMsgCraftItemsRequest
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        CMsgCraftItemsRequest.toObject = function toObject(message, options, q) {
+            if (!options)
+                options = {};
+            if (q === undefined)
+                q = 0;
+            if (q > $util.recursionLimit)
+                throw Error("max depth exceeded");
+            var object = {};
+            if (options.arrays || options.defaults)
+                object.craft_items = [];
+            if (options.defaults)
+                object.recipe_def = 0;
+            if (message.recipe_def != null && Object.hasOwnProperty.call(message, "recipe_def"))
+                object.recipe_def = message.recipe_def;
+            if (message.craft_items && message.craft_items.length) {
+                object.craft_items = [];
+                for (var j = 0; j < message.craft_items.length; ++j)
+                    if (typeof BigInt !== "undefined" && options.longs === BigInt)
+                        object.craft_items[j] = typeof message.craft_items[j] === "number" ? BigInt(message.craft_items[j]) : $util.Long.fromBits(message.craft_items[j].low >>> 0, message.craft_items[j].high >>> 0, true).toBigInt();
+                    else if (typeof message.craft_items[j] === "number")
+                        object.craft_items[j] = options.longs === String ? String(message.craft_items[j]) : message.craft_items[j];
+                    else
+                        object.craft_items[j] = options.longs === String ? $util.Long.prototype.toString.call(message.craft_items[j]) : options.longs === Number ? new $util.LongBits(message.craft_items[j].low >>> 0, message.craft_items[j].high >>> 0).toNumber(true) : message.craft_items[j];
+            }
+            return object;
+        };
+    
+        /**
+         * Converts this CMsgCraftItemsRequest to JSON.
+         * @function toJSON
+         * @memberof CMsgCraftItemsRequest
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        CMsgCraftItemsRequest.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+    
+        /**
+         * Gets the default type url for CMsgCraftItemsRequest
+         * @function getTypeUrl
+         * @memberof CMsgCraftItemsRequest
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        CMsgCraftItemsRequest.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/CMsgCraftItemsRequest";
+        };
+    
+        return CMsgCraftItemsRequest;
+    })();
+    
     $root.CSOEconClaimCode = (function() {
     
         /**
