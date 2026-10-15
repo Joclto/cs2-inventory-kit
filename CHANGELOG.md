@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.1](https://github.com/Joclto/cs2-inventory-kit/compare/v2.2.0...v2.2.1) (2026-10-15)
+
+
+### Bug Fixes
+
+* migrate craft to CMsgCraftItemsRequest protobuf for CS2 1.41.9.0+ ([837d1a3](https://github.com/Joclto/cs2-inventory-kit/commit/837d1a378c390ac5e703bef0993cf9a862e73e3c))
+
 ## [2.2.0](https://github.com/Joclto/cs2-inventory-kit/compare/v2.1.2...v2.2.0) (2026-09-10)
 
 
