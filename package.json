@@ -29,23 +29,29 @@
 		"@doctormckay/stdlib": "^2.10.0",
 		"bytebuffer": "^5.0.1",
 		"globaloffensive-sharecode": "^1.1.1",
-		"https-proxy-agent": "^7.0.0",
+		"https-proxy-agent": "^9.1.0",
 		"long": "^5.2.3",
-		"protobufjs": "^7.2.5",
+		"protobufjs": "^8.8.1",
 		"steamid": "^2.0.0"
 	},
 	"peerDependencies": {
 		"steam-user": ">=4.2.0"
 	},
 	"devDependencies": {
-		"protobufjs-cli": "^1.1.2",
-		"steam-user": "^4.26.1"
+		"protobufjs-cli": "^2.7.1",
+		"steam-user": "^5.3.0"
+	},
+	"overrides": {
+		"adm-zip": "^0.6.1",
+		"steam-appticket": {
+			"protobufjs": "^7.6.6"
+		}
 	},
 	"scripts": {
 		"generate-protos": "node scripts/generate-protos.js"
 	},
 	"engines": {
-		"node": ">=14.0.0"
+		"node": ">=20.0.0"
 	},
 	"publishConfig": {
 		"registry": "https://registry.npmjs.org/"
