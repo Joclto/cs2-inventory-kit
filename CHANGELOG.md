@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/Joclto/cs2-inventory-kit/compare/v2.2.1...v3.0.0) (2026-11-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* engines.node is now >=20.0.0. protobufjs 8 static modules no longer expose instance .toObject(); use static Message.toObject(msg, opts) (this library itself only uses the static form).
+
+### Features
+
+* upgrade all deps to latest majors, zero npm audit findings ([aa6e7da](https://github.com/Joclto/cs2-inventory-kit/commit/aa6e7da1633050af06949738679377ab248d198a))
+
 ## [2.2.1](https://github.com/Joclto/cs2-inventory-kit/compare/v2.2.0...v2.2.1) (2026-10-15)
 
 
